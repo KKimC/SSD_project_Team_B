@@ -1,6 +1,8 @@
 import pytest
-from ssd import SSD
-from file_manager import SSDFileManager
+
+from src.ssd import SSD
+from src.ssd_file_manager import SSDFileManager
+
 
 @pytest.fixture
 def ssd_file_manager_mk(mocker):
