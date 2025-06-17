@@ -186,7 +186,7 @@ def test_FULLWRITE명령어_정상_기대되는_출력(mocker: pytest_mock.MockF
     # LBA 0~99까지 반복되며 run_ssd_command가 호출되는지 확인
     sut = SsdShell()
     command = "fullwrite 0xABCDFFFF"
-    ret = sut.make_command("fullwrite 0xABCDFFFF")
+    ret = sut.make_command(command)
     assert ret == "SUCCESS"
 
 
@@ -196,7 +196,7 @@ def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND():
     # INVALID COMMAND
     sut = SsdShell()
     command = "fullwrite 0xABCF"
-    ret = sut.make_command("fullwrite 0xABCF")
+    ret = sut.make_command(command)
     assert ret == "INVALID COMMAND"
 
 
@@ -206,7 +206,7 @@ def test_FULLWRITE명령어_비정상인자_0x없음_INVALID_COMMAND():
     # INVALID COMMAND
     sut = SsdShell()
     command = "fullwrite ABCF33"
-    ret = sut.make_command("fullwrite ABCF33")
+    ret = sut.make_command(command)
     assert ret == "INVALID COMMAND"
 
 
