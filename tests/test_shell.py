@@ -79,56 +79,20 @@ def test_WRITE명령어_시스템콜명령어를잘만드는가():
     pass
 
 
-def test_WRITE명령어_누락된인자1_주소_INVALIDCOMMAND(mocker: MockerFixture):
-    # ex) Shell> write 0xAAAABBBB
-    # INVALID COMMAND
+def test_WRITE명령어_누락된인자(mocker: MockerFixture):
+    # Arrange
+    wrong_input_command = ["write", "write 0xAAAABBBB", "write 3"]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
+
     original_stdout = sys.stdout
     captured_output = io.StringIO()
     sys.stdout = captured_output
-    mocker.patch("builtins.input", return_value="write 0xAAAABBBB")
-    shell = SsdShell()
     expected = "INVALID COMMAND"
+    shell = SsdShell()
     # Act
     shell.run()
     sys.stdout = original_stdout
     output = captured_output.getvalue()
-
-    # Assert
-    assert output.strip() == expected.strip()
-
-
-def test_WRITE명령어_누락된인자2_값_INVALIDCOMMAND(mocker: MockerFixture):
-    # ex) Shell> write 3
-    # INVALID COMMAND
-    original_stdout = sys.stdout
-    captured_output = io.StringIO()
-    sys.stdout = captured_output
-    mocker.patch("builtins.input", return_value="write 3")
-    shell = SsdShell()
-    expected = "INVALID COMMAND"
-    # Act
-    shell.run()
-    sys.stdout = original_stdout
-    output = captured_output.getvalue()
-
-    # Assert
-    assert output.strip() == expected.strip()
-
-
-def test_WRITE명령어_누락된인자_ALL_INVALID_COMMAND(mocker: MockerFixture):
-    # ex) Shell> write
-    # INVALID COMMAND
-    original_stdout = sys.stdout
-    captured_output = io.StringIO()
-    sys.stdout = captured_output
-    mocker.patch("builtins.input", return_value="write")
-    shell = SsdShell()
-    expected = "INVALID COMMAND"
-    # Act
-    shell.run()
-    sys.stdout = original_stdout
-    output = captured_output.getvalue()
-
     # Assert
     assert output.strip() == expected.strip()
 
