@@ -49,7 +49,8 @@ def test_Write명령어_잘못된_LBA범위_입력시_파일매니저의_출력�
     file_manager: FileManager = mocker.Mock(spec=FileManager)
     ssd: SSD = SSD()
     WRONG_LBA_ADDRESS = 101
-    ssd.Write(WRONG_LBA_ADDRESS)
+    WRITE_VAlUE = 0x00000000
+    ssd.Write(WRONG_LBA_ADDRESS, WRITE_VAlUE)
 
     file_manager.print_ssd_output.assert_called_once()
 
@@ -57,7 +58,8 @@ def test_Write명령어_잘못된_LBA범위_입력시_파일매니저의_출력�
     file_manager: FileManager = mocker.Mock(spec=FileManager)
     ssd: SSD = SSD()
     WRONG_LBA_ADDRESS = 101
-    ssd.Write(WRONG_LBA_ADDRESS)
+    WRITE_VAlUE = 0x00000000
+    ssd.Write(WRONG_LBA_ADDRESS, WRITE_VAlUE)
 
     file_manager.print_ssd_output.assert_called_once_with("ERROR")
 
