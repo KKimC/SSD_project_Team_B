@@ -51,10 +51,15 @@ def test_Read명령어_잘못된_LBA범위_입력시_파일매니저의_출력�
 
 def test_Read명령어_기록한적없는_LBA_읽을시_0x00000000으로_읽는가(ssd_file_manager_mk, ssd_sut):
     UNWRITTEN_LBA_ADDRESS = 4
-    ssd_file_manager_mk.read_ssd_nand.side_effect = [0x00000000, 0x00040001, 0x00040001, 0x00000000, 0x00000000]
+    fake_nand = [0 for _ in range(100)]
+    fake_nand[1] = 0x00040001
+    fake_nand[2] = 0x00040001
+
+    ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
     result = ssd_sut.Read(UNWRITTEN_LBA_ADDRESS)
 
     assert result == 0x00000000
+    ssd_file_manager_mk.print_ssd_output.assert_called_once_with("0x00000000")
 
 def test_Write명령어_잘못된_LBA범위_입력시_파일매니저의_출력하는함수를_한번_호출하는가(ssd_file_manager_mk, ssd_sut):
     WRONG_LBA_ADDRESS = 101
