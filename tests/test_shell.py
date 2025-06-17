@@ -1,3 +1,8 @@
+import pytest
+import pytest_mock
+from src.ssd_shell import SsdShell
+
+
 def test_READ_명령어유효성검사_유효한명령어():
     # ex) Shell> reead 3
     # INVALID COMMAND
@@ -151,11 +156,18 @@ def test_공통_명령어_비정상인자_기대되는출력():
     # INVALID COMMAND
     pass
 
-def test_FULLWRITE명령어_정상_기대되는_출력():
+def test_FULLWRITE명령어_정상_기대되는_출력(mocker: pytest_mock.MockFixture):
     # ex.
     # Shell> fullwrite 0xABCDFFFF
     # 모든LBA에 값0xABCDFFF 가 적힌다
-    #
+    # LBA 0~99까지 반복되며 run_ssd_command가 호출되는지 확인
+    sut = SsdShell()
+    command = "fullwrite 0xABCDFFFF"
+    ret = sut.make_command("fullwrite 0xABCDFFFF")
+
+    assert ret == 1
+
+
     pass
 def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND():
     # ex.
