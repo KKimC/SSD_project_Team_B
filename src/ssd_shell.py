@@ -7,6 +7,5 @@ class SsdShell:
         print("[Write] Done")
 
     def make_command(self) -> str:
-        command = "write 3 0xAAAABBBB"
-        print(f"Shell> {command}")
+        command = input("Shell> ")
         return command

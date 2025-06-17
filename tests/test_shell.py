@@ -145,9 +145,10 @@ def test_WRITE명령어_정상인자_기대되는출력물을만드는가(mocker
     original_stdout = sys.stdout
     captured_output = io.StringIO()
     sys.stdout = captured_output
+    mocker.patch("builtins.input", return_value="write 3 0xAAAABBBB")
     shell = SsdShell()
 
-    expected = "\n".join(["Shell> write 3 0xAAAABBBB", "[Write] Done"])
+    expected = "[Write] Done"
     # Act
     shell.run()
     sys.stdout = original_stdout
