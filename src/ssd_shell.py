@@ -4,3 +4,6 @@ class SsdShell:
 
     def run(self):
         pass
+
+    def check_invalid_read_command(self, command: str):
+        return "INVALID COMMAND"
