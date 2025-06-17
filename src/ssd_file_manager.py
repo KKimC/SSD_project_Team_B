@@ -5,7 +5,7 @@ class SSDFileManager():
     def read_ssd_nand(self):
         return [ 0 for _ in range(100) ]
 
-    def patch_ssd_nand(self):
+    def patch_ssd_nand(self, nand_list):
         pass
 
     def print_ssd_output(self, string):

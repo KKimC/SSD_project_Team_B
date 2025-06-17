@@ -9,8 +9,8 @@ class SSD():
     def select_file_manager(self):
         self.ssd_file_manager = SSDFileManager()
 
-    def read(self, add):
-        return self.nand[add]
+    def read(self, address):
+        return self.nand[address]
 
-    def write(self):
+    def write(self, address, value):
         pass

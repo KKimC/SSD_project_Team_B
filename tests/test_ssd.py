@@ -21,7 +21,7 @@ def test_ssd_객체_선언_후_처음_read할때_0이_반환되는가(ssd_file_m
     assert ssd_sut.read(100) == 0
 
 def test_read가_output에_제대로_된_값을_전달하는가(ssd_file_manager_mk, ssd_sut):
-
+    pass
 
 def test_read가_제대로_된_값을_리턴하는가():
     pass
