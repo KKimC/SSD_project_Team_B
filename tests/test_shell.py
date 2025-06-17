@@ -1,3 +1,6 @@
+from src.ssd_shell import SsdShell
+
+
 def test_READ_명령어유효성검사_유효한명령어():
     # ex) Shell> reead 3
     # INVALID COMMAND
@@ -61,55 +64,70 @@ def test_READ_정상적인_값을_출력하는가():
     # 0x00000000
     pass
 
+
 def test_WRITE명령어_정상인자_시스템콜명령어를잘만드는가():
     pass
+
 
 def test_WRITE명령어_시스템콜명령어를잘만드는가():
 
     # ex. ssd.py write 3 0xAAAABBBB 의 CLI 명령어를 잘 만드는지
     pass
 
+
 def test_WRITE명령어_누락된인자1_주소_INVALIDCOMMAND():
     # ex) Shell> write 0xAAAABBBB
     # INVALID COMMAND
     pass
+
 
 def test_WRITE명령어_누락된인자2_값_INVALIDCOMMAND():
     # ex) Shell> write 3
     # INVALID COMMAND
     pass
 
+
 def test_WRITE명령어_누락된인자_ALL_INVALID_COMMAND():
     # ex) Shell> write
     # INVALID COMMAND
     pass
 
+
 def test_WRITE명령어_유효하지않은인자_주소_음수_INVALID_COMMAND():
     # ex) Shell> write -1 0xAAAABBBB
     # INVALID COMMAND
     pass
+
+
 def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAND():
     # ex) Shell> write 200 0xAAAABBBB
     # INVALID COMMAND
     pass
+
 
 def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_COMMAND():
     # ex) Shell> write ABC 0xAAAABBBB
     # INVALID COMMAND
     pass
 
+
 def test_WRITE명령어_유효하지않은인자_값_길이10초과_INVALID_COMMAND():
     # ex) Shell> write 3 0xAAAABBBBCC
     # INVALID COMMAND
     pass
+
+
 def test_WRITE명령어_유효하지않은인자_값_0x가앞에없음_INVALID_COMMAND():
     # ex) Shell> write 3 AAAABBBB
     # INVALID COMMAND
     pass
+
+
 def test_WRITE명령어_유효하지않은인자_허용되지않은문자포함_INVALID_COMMAND():
     # ex) Shell> write 3 0xXXXXYYYY
     # INVALID COMMAND
     pass
+
 
 def test_WRITE명령어_정상동작시_실제로파일에저장되는가():
     pass
@@ -121,17 +139,22 @@ def test_WRITE명령어_정상인자_기대되는출력물을만드는가():
     # [Write] Done
     pass
 
+
 def test_HELP명령어_정상_기대되는출력():
     # ex.
     # Shell> help
     # 제작자: 김성현, 강태윤, 임동혁, 김기웅, 김남민, 정보람, 김민규
     # write command - write 200 0xaaaabbbb ...등등
     pass
+
+
 def test_HELP명령어_비정상_기대되는출력():
     # ex.
     # Shell> help aa
     # INVALID COMMAND
     pass
+
+
 def test_EXIT명령어_정상_기대되는출력():
     # ex.
     # Shell> exit
@@ -139,11 +162,13 @@ def test_EXIT명령어_정상_기대되는출력():
     # 터미널 종료
     pass
 
+
 def test_EXIT명령어_비정상_기대되는출력():
     # ex.
     # Shell> exit aa
     # INVALID COMMAND
     pass
+
 
 def test_공통_명령어_비정상인자_기대되는출력():
     # ex.
@@ -151,32 +176,43 @@ def test_공통_명령어_비정상인자_기대되는출력():
     # INVALID COMMAND
     pass
 
+
 def test_FULLWRITE명령어_정상_기대되는_출력():
     # ex.
     # Shell> fullwrite 0xABCDFFFF
     # 모든LBA에 값0xABCDFFF 가 적힌다
     #
     pass
+
+
 def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND():
     # ex.
     # Shell> fullwrite 0xABCF
     # INVALID COMMAND
     pass
+
+
 def test_FULLWRITE명령어_비정상인자_0x없음_INVALID_COMMAND():
     # ex.
     # Shell> fullwrite ABCF33
     # INVALID COMMAND
     pass
+
+
 def test_FULLWRITE명령어_비정상인자_특수문자_INVALID_COMMAND():
     # ex.
     # Shell> fullwrite 0x!@#$@@@
     # INVALID COMMAND
     pass
+
+
 def test_FULLWRITE명령어_비정상인자_공백_INVALID_COMMAND():
     # ex.
-    # Shell> fullwrite 
+    # Shell> fullwrite
     # INVALID COMMAND
     pass
+
+
 def test_FULLWRITE명령어_정상인자_실제로파일저장확인():
     # ex.
     # Shell> fullwrite 0xABCDFFFF
@@ -184,18 +220,27 @@ def test_FULLWRITE명령어_정상인자_실제로파일저장확인():
     # 전체 일지 확인 가능한지 0~100 0xABCDFFFF
     pass
 
+
 def test_FULLREAD명령어_정상인자_기대되는_출력():
-    # ex.
-    # Shell> fullread
-    # 모든 값 화면 출력...
-    # 0
-    # 0xABCDABCD
-    # 1
-    # 0xABCDABCD
-    # 2
-    # 0xABCDABCD
-    # ... 100까지
-    pass
+    shell = SsdShell()
+    list_cmd = shell.make_command("fullread")
+    matched = True
+    assert len(list_cmd) == 100
+    for cmd in list_cmd:
+        if not cmd.startswith("ssd.py R "):
+            matched = False
+            break
+        params = cmd.split("ssd.py R ")
+        if len(params) != 2:
+            matched = False
+            break
+        if not params[1].isdigit():
+            matched = False
+            break
+
+    assert matched == True
+
+
 def test_FULLREAD명령어_비정상인자_불필요인자_INVALID_COMMAND():
     # ex.
     # Shell> fullread 0xABCFF
