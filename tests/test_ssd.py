@@ -8,9 +8,9 @@ def ssd_file_manager_mk(mocker):
     return ssd_file_manager_mk
 
 @pytest.fixture
-def ssd_sut(mk_ssd_file_manager):
+def ssd_sut(ssd_file_manager_mk):
     ssd_sut = SSD()
-    ssd_sut.select_file_manager(mk_ssd_file_manager)
+    ssd_sut.select_file_manager(ssd_file_manager_mk)
     return ssd_sut
 
 def test_ssd_객체_선언_후_처음_read할때_0이_반환되는가(ssd_file_manager_mk, ssd_sut):
@@ -18,7 +18,7 @@ def test_ssd_객체_선언_후_처음_read할때_0이_반환되는가(ssd_file_m
     assert ssd_sut.read(10) == 0
     assert ssd_sut.read(100) == 0
 
-def test_read가_output에_제대로_된_값을_전달하는가():
+def test_read가_output에_제대로_된_값을_전달하는가(ssd_file_manager_mk, ssd_sut):
 
 
 def test_read가_제대로_된_값을_리턴하는가():
