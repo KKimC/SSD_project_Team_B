@@ -79,22 +79,58 @@ def test_WRITE명령어_시스템콜명령어를잘만드는가():
     pass
 
 
-def test_WRITE명령어_누락된인자1_주소_INVALIDCOMMAND():
+def test_WRITE명령어_누락된인자1_주소_INVALIDCOMMAND(mocker: MockerFixture):
     # ex) Shell> write 0xAAAABBBB
     # INVALID COMMAND
-    pass
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    mocker.patch("builtins.input", return_value="write 0xAAAABBBB")
+    shell = SsdShell()
+    expected = "INVALID COMMAND"
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+
+    # Assert
+    assert output.strip() == expected.strip()
 
 
-def test_WRITE명령어_누락된인자2_값_INVALIDCOMMAND():
+def test_WRITE명령어_누락된인자2_값_INVALIDCOMMAND(mocker: MockerFixture):
     # ex) Shell> write 3
     # INVALID COMMAND
-    pass
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    mocker.patch("builtins.input", return_value="write 3")
+    shell = SsdShell()
+    expected = "INVALID COMMAND"
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+
+    # Assert
+    assert output.strip() == expected.strip()
 
 
-def test_WRITE명령어_누락된인자_ALL_INVALID_COMMAND():
+def test_WRITE명령어_누락된인자_ALL_INVALID_COMMAND(mocker: MockerFixture):
     # ex) Shell> write
     # INVALID COMMAND
-    pass
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    mocker.patch("builtins.input", return_value="write")
+    shell = SsdShell()
+    expected = "INVALID COMMAND"
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+
+    # Assert
+    assert output.strip() == expected.strip()
 
 
 def test_WRITE명령어_유효하지않은인자_주소_음수_INVALID_COMMAND():
