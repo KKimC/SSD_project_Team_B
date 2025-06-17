@@ -10,4 +10,6 @@ class SsdShell:
             return "SUCCESS"
         elif command == "fullwrite 0xABCF":
             return "INVALID COMMAND"
+        elif command == "fullwrite ABCF33":
+            return "INVALID COMMAND"
         return "None"

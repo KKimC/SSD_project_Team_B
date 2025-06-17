@@ -204,7 +204,10 @@ def test_FULLWRITE명령어_비정상인자_0x없음_INVALID_COMMAND():
     # ex.
     # Shell> fullwrite ABCF33
     # INVALID COMMAND
-    pass
+    sut = SsdShell()
+    command = "fullwrite ABCF33"
+    ret = sut.make_command("fullwrite ABCF33")
+    assert ret == "INVALID COMMAND"
 
 
 def test_FULLWRITE명령어_비정상인자_특수문자_INVALID_COMMAND():
