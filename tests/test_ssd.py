@@ -1,6 +1,24 @@
 import pytest
 
-class test_Read와Write_예외경우:
+def test_ssd_객체_선언_후_처음_read할때_0이_반환되는가():
+    pass
+
+def test_read가_output에_제대로_된_값을_전달하는가():
+    pass
+
+def test_read가_제대로_된_값을_리턴하는가():
+    pass
+
+def test_write시_file_manager의_patch가_호출되는가():
+    pass
+
+def test_write시_file_manager의_print_ssd_output에_제대로_된_값이_들어가는가():
+    pass
+
+def test_write시_nand에_제대로_된_값이_들어가는가():
+    pass
+
+
 def test_Read명령어_잘못된_LBA범위_입력시_파일매니저의_출력하는함수를_한번_호출하는가():
     pass
 
