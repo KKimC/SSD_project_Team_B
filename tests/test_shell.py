@@ -97,16 +97,44 @@ def test_WRITE명령어_누락된인자(mocker: MockerFixture):
     assert output.strip() == expected.strip()
 
 
-def test_WRITE명령어_유효하지않은인자_주소_음수_INVALID_COMMAND():
+def test_WRITE명령어_유효하지않은인자_INVALID_COMMAND(mocker: MockerFixture):
     # ex) Shell> write -1 0xAAAABBBB
     # INVALID COMMAND
-    pass
+    # Arrange
+    mocker.patch("builtins.input", return_value="write -1 0xAAAABBBB")
+
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
 
 
-def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAND():
+def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAND(
+    mocker: MockerFixture,
+):
     # ex) Shell> write 200 0xAAAABBBB
     # INVALID COMMAND
-    pass
+    # Arrange
+    mocker.patch("builtins.input", return_value="write 200 0xAAAABBBB")
+
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
 
 
 def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_COMMAND():
