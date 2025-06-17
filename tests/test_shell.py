@@ -3,7 +3,7 @@ from pytest_mock import MockerFixture
 from src.ssd_shell import SsdShell
 
 
-def test_READ_명령어유효성검사_유효한명령어(mocker: MockerFixture):
+def test_READ_명령어유효성검사_유효하지않은명령어(mocker: MockerFixture):
     sut = SsdShell()
     command = "reead 3"
     ret = sut.check_invalid_read_command(command)
