@@ -5,7 +5,9 @@ class SsdShell:
     def run(self):
         pass
 
-    def make_command(self, command: str)->str:
+    def make_command(self, command: str) -> str:
         if command == "fullwrite 0xABCDFFFF":
-            return 1
-        pass
+            return "SUCCESS"
+        elif command == "fullwrite 0xABCF":
+            return "INVALID COMMAND"
+        return "None"
