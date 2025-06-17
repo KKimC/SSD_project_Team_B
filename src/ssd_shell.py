@@ -3,4 +3,10 @@ class SsdShell:
         pass
 
     def run(self):
-        pass
+        command = self.make_command()
+        print("[Write] Done")
+
+    def make_command(self) -> str:
+        command = "write 3 0xAAAABBBB"
+        print(f"Shell> {command}")
+        return command
