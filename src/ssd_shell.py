@@ -50,9 +50,7 @@ class SsdShell:
             return True
 
         LBA = int(command[1])
-        if LBA > 99:
-            return True
-        if LBA < 0:
+        if LBA > 99 or LBA < 0:
             return True
 
         return False
