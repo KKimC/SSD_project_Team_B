@@ -165,54 +165,17 @@ def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_
     assert output.strip() == expected.strip()
 
 
-def test_WRITE명령어_유효하지않은인자_값_길이10초과_INVALID_COMMAND(
+def test_WRITE명령어_유효하지않은인자_값_INVALID_COMMAND(
     mocker: MockerFixture,
 ):
-    # ex) Shell> write 3 0xAAAABBBBCC
-    # INVALID COMMAND
-
-    mocker.patch("builtins.input", return_value="write 3 0xAAAABBBB11")
-
-    original_stdout = sys.stdout
-    captured_output = io.StringIO()
-    sys.stdout = captured_output
-    expected = "INVALID COMMAND"
-    shell = SsdShell()
-    # Act
-    shell.run()
-    sys.stdout = original_stdout
-    output = captured_output.getvalue()
-    # Assert
-    assert output.strip() == expected.strip()
-
-
-def test_WRITE명령어_유효하지않은인자_값_0x가앞에없음_INVALID_COMMAND(
-    mocker: MockerFixture,
-):
-    # ex) Shell> write 3 AAAABBBB
-    # INVALID COMMAND
-    wrong_input_command = ["write 3 xxAAAABBBB", "write 3 AAAABBBB12"]
-    mocker.patch("builtins.input", side_effect=wrong_input_command)
-
-    original_stdout = sys.stdout
-    captured_output = io.StringIO()
-    sys.stdout = captured_output
-    expected = "INVALID COMMAND"
-    shell = SsdShell()
-    # Act
-    shell.run()
-    sys.stdout = original_stdout
-    output = captured_output.getvalue()
-    # Assert
-    assert output.strip() == expected.strip()
-
-
-def test_WRITE명령어_유효하지않은인자_허용되지않은문자포함_INVALID_COMMAND(
-    mocker: MockerFixture,
-):
-    # ex) Shell> write 3 0xXXXXYYYY
-    # INVALID COMMAND
-    wrong_input_command = ["write 3 0xXXXXYYYY", "write 3 0xXQWEdf12"]
+    wrong_input_command = [
+        "write 3 xxAAAABBBB",  # 0x가 없는경우
+        "write 3 AAAABBBB12",
+        "write 3 0xXXXXYYYY",  # 허용되지 않는 문자 포함
+        "write 3 0xXQWEdf12",
+        "write 3 0xAAAABBBB11",  # 길이 초과
+        "write 3 0x111111111111111111111",
+    ]
     mocker.patch("builtins.input", side_effect=wrong_input_command)
 
     original_stdout = sys.stdout
