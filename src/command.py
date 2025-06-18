@@ -106,9 +106,10 @@ class FullWriteCommand(Command):
 
     def execute(self):
         for lba in range(100):
-            cmd = ["python", "ssd.py", "W", int(lba), self.args[1]]
+            cmd = ["python", "ssd.py", "W", str(lba), self.args[1]]
             result = subprocess.run(cmd)
         print("[Write] Done")
+        return
 
 
 class ExitCommand(Command):
