@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 from typing import List
@@ -13,12 +14,10 @@ class Command(ABC):
         self.args = args
 
     @abstractmethod
-    def is_valid(self) -> bool:
-        ...
+    def is_valid(self) -> bool: ...
 
     @abstractmethod
-    def execute(self):
-        ...
+    def execute(self): ...
 
     def _is_valid_8char_hex(self, write_value_str: str) -> bool:
         return bool(re.fullmatch(r"0x[0-9a-fA-F]{8}", write_value_str))
@@ -66,12 +65,17 @@ class ReadCommand(Command):
     def execute(self):
         lba_address = self.args[1]
 
+        env = os.environ.copy()
+        env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
+
         result = subprocess.run(
             ["python", "ssd.py", "R", lba_address],
             capture_output=True,
             text=True,
+            env=env,
         )
-        print("[Read] Done")
+        read_value = result.stdout
+        print(f"[Read] LBA {lba_address.zfill(2)} : {read_value}")
 
 
 class FullReadCommand(Command):
