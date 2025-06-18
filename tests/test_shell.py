@@ -1,4 +1,5 @@
 import io
+import re
 import sys
 import pytest
 from pytest_mock import MockerFixture
@@ -11,6 +12,7 @@ def test_READ_명령어유효성검사_유효하지않은명령어():
     ret = sut.run(command)
 
     assert ret == "INVALID COMMAND"
+
 
 def test_READ_명령어유효성검사_누락():
     sut = SsdShell()
@@ -80,6 +82,7 @@ def test_WRITE명령어_시스템콜명령어를잘만드는가():
 
     # ex. ssd.py write 3 0xAAAABBBB 의 CLI 명령어를 잘 만드는지
     pass
+
 
 def test_WRITE명령어_누락된인자(mocker: MockerFixture):
     # Arrange
@@ -159,8 +162,6 @@ def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_
     assert output.strip() == expected.strip()
 
 
-
-
 def test_WRITE명령어_유효하지않은인자_값_길이10초과_INVALID_COMMAND():
     # ex) Shell> write 3 0xAAAABBBBCC
     # INVALID COMMAND
@@ -202,8 +203,6 @@ def test_WRITE명령어_정상인자_기대되는출력물을만드는가(mocker
 
     # Assert
     assert output.strip() == expected.strip()
-
-
 
 
 def test_HELP명령어_정상_기대되는출력():
@@ -287,23 +286,44 @@ def test_FULLWRITE명령어_정상인자_실제로파일저장확인():
     pass
 
 
-def test_FULLREAD명령어_정상인자_기대되는_출력():
-    shell = SsdShell()
-    list_cmd = shell.make_command("fullread")
-    matched = True
-    assert len(list_cmd) == 100
-    for cmd in list_cmd:
-        if not cmd.startswith("ssd.py R "):
-            matched = False
-            break
-        params = cmd.split("ssd.py R ")
-        if len(params) != 2:
-            matched = False
-            break
-        if not params[1].isdigit():
-            matched = False
-            break
+def _is_valid_8char_hex(s):
+    return bool(re.fullmatch(r"0x[0-9a-fA-F]{8}", s))
 
+
+def _make_100_reads():
+    list_cmds = []
+    for i in range(100):
+        list_cmds.append(f"ssd.py R {i}")
+    return list_cmds
+
+
+# @pytest.mark.skip
+def test_FULLREAD명령어_정상인자_기대되는_출력(mocker: MockerFixture):
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    mocker.patch("builtins.input", return_value="fullread")
+
+    # override make_commmand
+    fullread_method = mocker.patch("ssd.shell.SsdShell.make_command")
+    fullread_method.side_effect = _make_100_reads
+
+    shell = SsdShell()
+
+    expected_line_num = 100
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+
+    # Assert
+    arr_response = output.strip().splitlines()
+    assert len(arr_response) == expected_line_num
+    matched = True
+    for response in arr_response:
+        if _is_valid_8char_hex(response):
+            matched = False
+            break
     assert matched == True
 
 
