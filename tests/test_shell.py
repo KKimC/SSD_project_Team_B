@@ -88,16 +88,21 @@ def test_READ_Console에_값을_출력하는가(mocker: MockerFixture, shell):
     pass
 
 
-def test_WRITE명령어_정상인자_시스템콜명령어를잘만드는가():
+def test_READ_비어있는_LBA에서_읽은값이_0x00000000인가(mocker: MockerFixture, shell):
+    # ex) Shell> read 3
+    # 0x00000000
     pass
 
 
-def test_WRITE명령어_시스템콜명령어를잘만드는가():
+def test_READ_txt파일이_없을때_읽은값이_0x00000000인가(mocker: MockerFixture, shell):
+    # ex) Shell> read 3
+    # 0x00000000
     pass
 
 
-def test_WRITE명령어_시스템콜명령어를잘만드는가():
-    # ex. ssd.py write 3 0xAAAABBBB 의 CLI 명령어를 잘 만드는지
+def test_READ_정상적인_값을_출력하는가(mocker: MockerFixture, shell):
+    # ex) Shell> read 3
+    # 0x00000000
     pass
 
 
@@ -122,9 +127,7 @@ def test_WRITE명령어_유효하지않은인자_INVALID_COMMAND(mocker: MockerF
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAND(
-    mocker: MockerFixture, shell
-):
+def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAND(mocker: MockerFixture, shell):
     # ex) Shell> write 200 0xAAAABBBB
     # INVALID COMMAND
     # Arrange
@@ -135,9 +138,7 @@ def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAN
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_COMMAND(
-    mocker: MockerFixture, shell
-):
+def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_COMMAND(mocker: MockerFixture, shell):
     # ex) Shell> write ABC 0xAAAABBBB
     # INVALID COMMAND
     mocker.patch("builtins.input", return_value="write 1.5 0xAAAABBBB")
@@ -163,20 +164,20 @@ def test_WRITE명령어_유효하지않은인자_값_INVALID_COMMAND(mocker: Moc
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_WRITE명령어_정상동작시_실제로파일에저장되는가():
-    pass
-
-
 def test_WRITE명령어_정상인자_기대되는출력물을만드는가(mocker: MockerFixture, shell):
-    # ex.
-    # Shell> write 3 0xAAAABBBB
-    # [Write] Done
     # Arrange
     mocker.patch("builtins.input", return_value="write 3 0xAAAABBBB")
+    mock_subprocess = mocker.patch("src.command.subprocess.run")
+
     expected = "[Write] Done"
 
     # act and assert
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
+    mock_subprocess.assert_called_once_with(
+        ["python", "ssd.py", "W", "3", "0xAAAABBBB"],
+        capture_output=True,
+        text=True,
+    )
 
 
 def test_HELP명령어_정상_기대되는출력():
@@ -195,19 +196,33 @@ def test_HELP명령어_비정상_기대되는출력():
     pass
 
 
-def test_EXIT명령어_정상_기대되는출력():
+def test_EXIT명령어_정상(mocker: MockerFixture, shell):
     # ex.
     # Shell> exit
     # exit.
     # 터미널 종료
-    pass
+    mocker.patch("builtins.input", return_value="exit")
+
+    # act and assert
+    shell.run()
+
+    assert shell.is_running == False
 
 
-def test_EXIT명령어_비정상_기대되는출력():
+def test_EXIT명령어_비정상_기대되는출력(mocker: MockerFixture, shell):
     # ex.
     # Shell> exit aa
     # INVALID COMMAND
-    pass
+    wrong_input_command = [
+        "exit aa",
+        "exit 123",
+        "exit 5 6",
+    ]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
+    expected = INVALID_COMMAND
+
+    # act and assert
+    assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
 def test_공통_명령어_비정상인자_기대되는출력():
@@ -224,14 +239,13 @@ def test_FULLWRITE명령어_정상_기대되는_출력(mocker: MockerFixture, sh
     # LBA 0~99까지 반복되며 run_ssd_command가 호출되는지 확인
     mocker.patch("builtins.input", return_value="fullwrite 0xAAAABBBB")
     expected = "[Write] Done"
-
+    mock_subprocess = mocker.patch("src.command.subprocess.run")
     # act and assert
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
+    assert mock_subprocess.call_count == 100
 
 
-def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND(
-    mocker: MockerFixture, shell
-):
+def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND(mocker: MockerFixture, shell):
     # ex.
     # Shell> fullwrite 0xABCF
     # INVALID COMMAND
@@ -242,9 +256,7 @@ def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND(
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_FULLWRITE명령어_비정상인자_0x없음_INVALID_COMMAND(
-    mocker: MockerFixture, shell
-):
+def test_FULLWRITE명령어_비정상인자_0x없음_INVALID_COMMAND(mocker: MockerFixture, shell):
     # ex.
     # Shell> fullwrite ABCF33
     # INVALID COMMAND
@@ -255,9 +267,7 @@ def test_FULLWRITE명령어_비정상인자_0x없음_INVALID_COMMAND(
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_FULLWRITE명령어_비정상인자_특수문자_INVALID_COMMAND(
-    mocker: MockerFixture, shell
-):
+def test_FULLWRITE명령어_비정상인자_특수문자_INVALID_COMMAND(mocker: MockerFixture, shell):
     # ex.
     # Shell> fullwrite 0x!@#$@@@
     # INVALID COMMAND
@@ -277,15 +287,6 @@ def test_FULLWRITE명령어_비정상인자_공백_INVALID_COMMAND(mocker: Mocke
 
     # act and assert
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
-
-
-# 이거 SSD.py 쪽이면 지워도?
-def test_FULLWRITE명령어_정상인자_실제로파일저장확인(mocker: MockerFixture, shell):
-    # ex.
-    # Shell> fullwrite 0xABCDFFFF
-    # 모든LBA에 값0xABCDFFF 가 적힌다
-    # 전체 일지 확인 가능한지 0~100 0xABCDFFFF
-    pass
 
 
 def _is_valid_8char_hex(s):
