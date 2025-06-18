@@ -3,6 +3,10 @@ from typing import List
 from abc import abstractmethod, ABC
 
 
+class ExitException(Exception):
+    pass
+
+
 class Command(ABC):
     def __init__(self, args: List[str]):
         self.args = args
@@ -87,4 +91,4 @@ class ExitCommand(Command):
         return True
 
     def execute(self):
-        raise Exception
+        raise ExitException
