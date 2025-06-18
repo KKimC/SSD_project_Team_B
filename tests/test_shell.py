@@ -5,7 +5,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from src.ssd_shell import SSDShell
-from src.command import FullWriteAndReadCompareCommand
+from src.command import FullWriteAndReadCompareCommand, PartialLBAWrite
 
 INVALID_COMMAND = "INVALID COMMAND"
 
@@ -361,3 +361,25 @@ def test_FULLWRITE_AND_READ_COMPARE_실패_FAIL_1번(mocker: MockerFixture, shel
     # act and assert
     assert result.replace("\n", "") == "FAIL"
     assert mock_write.call_count == 1
+
+
+def test_PARTIAL_LBA_WRITE_정상_PASS_WRITE_150번(mocker: MockerFixture, shell):
+    # Arrange
+    mocker.patch("builtins.input", return_value="2_PartialLBAWrite")
+    mock_write = mocker.patch("src.command.WriteCommand")
+    mocker.patch.object(PartialLBAWrite, "_read_compare", return_value=True)
+    result = _do_run_and_get_result_from_buffer(shell)
+    # act and assert
+    assert result.replace("\n", "") == "PASS" * 150
+    assert mock_write.call_count == 150
+
+
+def test_PARTIAL_LBA_WRITE_실패_FAIL_WRITE_5번(mocker: MockerFixture, shell):
+    # Arrange
+    mocker.patch("builtins.input", return_value="2_PartialLBAWrite")
+    mock_write = mocker.patch("src.command.WriteCommand")
+    mocker.patch.object(PartialLBAWrite, "_read_compare", return_value=False)
+    result = _do_run_and_get_result_from_buffer(shell)
+    # act and assert
+    assert result.replace("\n", "") == "FAIL"
+    assert mock_write.call_count == 5

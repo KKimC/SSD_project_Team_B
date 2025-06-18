@@ -149,3 +149,31 @@ class FullWriteAndReadCompareCommand(Command):
         read_command = ReadCommand(["read", lba_address])
         result = read_command.execute()
         return result == value
+
+
+class PartialLBAWrite(Command):
+
+    def is_valid(self) -> bool:
+        if len(self.args) == 1 and self.args[0] in ["2_", "2_PartialLBAWrite"]:
+            return True
+        return False
+
+    def execute(self):
+        for _ in range(30):
+            write_value = generate_random_hex()
+            lba_address_list = [4, 0, 3, 1, 2]
+            for write_lba_address in lba_address_list:
+                command_list = ["write", str(write_lba_address), write_value]
+                WriteCommand(command_list).execute()
+
+            for read_lba_address in range(5):
+                if self._read_compare(read_lba_address, write_value):
+                    print("PASS")
+                else:
+                    print("FAIL")
+                    raise ExitException
+
+    def _read_compare(self, lba_address: int, value: str) -> bool:
+        read_command = ReadCommand(["read", lba_address])
+        result = read_command.execute()
+        return result == value
