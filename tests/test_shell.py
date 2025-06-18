@@ -1,4 +1,5 @@
 import io
+import re
 import sys
 import pytest
 from pytest_mock import MockerFixture
@@ -243,7 +244,6 @@ def test_WRITE명령어_유효하지않은인자_값_INVALID_COMMAND(
         "write 3 0x111111111111111111111",
     ]
     mocker.patch("builtins.input", side_effect=wrong_input_command)
-
     original_stdout = sys.stdout
     captured_output = io.StringIO()
     sys.stdout = captured_output
@@ -441,23 +441,37 @@ def test_FULLWRITE명령어_정상인자_실제로파일저장확인(
     pass
 
 
-def test_FULLREAD명령어_정상인자_기대되는_출력():
-    shell = SsdShell()
-    list_cmd = shell.make_command("fullread")
-    matched = True
-    assert len(list_cmd) == 100
-    for cmd in list_cmd:
-        if not cmd.startswith("ssd.py R "):
-            matched = False
-            break
-        params = cmd.split("ssd.py R ")
-        if len(params) != 2:
-            matched = False
-            break
-        if not params[1].isdigit():
-            matched = False
-            break
+def _is_valid_8char_hex(s):
+    return bool(re.fullmatch(r"0x[0-9a-fA-F]{8}", s))
 
+
+def _make_100_reads():
+    list_cmds = []
+    for i in range(100):
+        list_cmds.append(f"ssd.py R {i}")
+    return list_cmds
+
+
+def test_FULLREAD명령어_정상인자_기대되는_출력(mocker: MockerFixture):
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    mocker.patch("builtins.input", return_value="fullread")
+
+    shell = SsdShell()
+    expected_line_num = 100
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+
+    arr_response = output.strip().splitlines()
+    assert len(arr_response) == expected_line_num
+    matched = True
+    for response in arr_response:
+        if _is_valid_8char_hex(response):
+            continue
+        matched = False
+        break
     assert matched == True
 
 
