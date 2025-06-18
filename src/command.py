@@ -50,6 +50,13 @@ class ReadCommand(Command):
         return self._is_valid_lba(self.args[1])
 
     def execute(self):
+        lba_address = self.args[1]
+
+        result = subprocess.run(
+            ["python", "ssd.py", "R", lba_address],
+            capture_output=True,
+            text=True,
+        )
         print("[Read] Done")
 
 
