@@ -118,6 +118,9 @@ class ReadCommand(Command):
         env = os.environ.copy()
         env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
 
+        env = os.environ.copy()
+        env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
+
         result = subprocess.run(
             ["python", "ssd.py", "R", lba_address],
             capture_output=True,
@@ -254,6 +257,7 @@ class ScriptCommand(Command):
         read_command = ReadCommand(["read", str(lba_address)])
         result = read_command.execute()
         return result.strip() == value.strip()
+
 
 
 class HelpCommand(Command):
