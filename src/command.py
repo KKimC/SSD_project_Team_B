@@ -116,6 +116,7 @@ class ReadCommand(Command):
         env = os.environ.copy()
         env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
 
+
         result = subprocess.run(
             ["python", "ssd.py", "R", lba_address],
             capture_output=True,
