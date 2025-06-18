@@ -137,10 +137,24 @@ def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAN
     assert output.strip() == expected.strip()
 
 
-def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_COMMAND():
+def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_COMMAND(
+    mocker: MockerFixture,
+):
     # ex) Shell> write ABC 0xAAAABBBB
     # INVALID COMMAND
-    pass
+    mocker.patch("builtins.input", return_value="write 1.5 0xAAAABBBB")
+
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
 
 
 def test_WRITE명령어_유효하지않은인자_값_길이10초과_INVALID_COMMAND():
