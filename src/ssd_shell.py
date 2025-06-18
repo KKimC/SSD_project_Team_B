@@ -48,4 +48,7 @@ class SsdShell:
         LBA = int(command[1])
         if LBA > 99:
             return True
+        if LBA < 0:
+            return True
+
         return False
