@@ -327,7 +327,6 @@ def test_FULLREAD명령어_정상인자_기대되는_출력(mocker: MockerFixtur
     assert matched == True
 
 
-@pytest.mark.skip
 def test_FULLREAD_reads를_형식에_맞게_보내는지(mocker: MockerFixture, shell):
     mocker.patch("builtins.input", return_value="fullread")
     expected_line_num = 100
