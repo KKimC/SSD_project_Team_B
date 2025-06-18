@@ -16,9 +16,9 @@ def ssd_sut(ssd_file_manager_mk):
     return ssd_sut
 
 def test_ssd_객체_선언_후_처음_read할때_0이_반환되는가(ssd_file_manager_mk, ssd_sut):
-    assert ssd_sut.read(0) == 0
-    assert ssd_sut.read(10) == 0
-    assert ssd_sut.read(99) == 0
+    assert ssd_sut.read(0) == "0x00000000"
+    assert ssd_sut.read(10) == "0x00000000"
+    assert ssd_sut.read(99) == "0x00000000"
 
 def test_read가_output에_제대로_된_값을_전달하는가(ssd_file_manager_mk, ssd_sut):
     ssd_sut.read(1)
