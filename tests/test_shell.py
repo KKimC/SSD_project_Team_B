@@ -77,7 +77,9 @@ def test_WRITE명령어_정상인자_시스템콜명령어를잘만드는가():
 
 
 def test_WRITE명령어_시스템콜명령어를잘만드는가():
+    pass
 
+def test_WRITE명령어_시스템콜명령어를잘만드는가():
     # ex. ssd.py write 3 0xAAAABBBB 의 CLI 명령어를 잘 만드는지
     pass
 
@@ -161,6 +163,7 @@ def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_
 
 
 
+
 def test_WRITE명령어_유효하지않은인자_값_길이10초과_INVALID_COMMAND():
     # ex) Shell> write 3 0xAAAABBBBCC
     # INVALID COMMAND
@@ -206,11 +209,13 @@ def test_WRITE명령어_정상인자_기대되는출력물을만드는가(mocker
 
 
 
-def test_HELP명령어_정상_기대되는출력():
+
+def test_HELP명령어_정상_기대되는출력(mocker):
     # ex.
     # Shell> help
     # 제작자: 김성현, 강태윤, 임동혁, 김기웅, 김남민, 정보람, 김민규
     # write command - write 200 0xaaaabbbb ...등등
+
     pass
 
 
@@ -243,26 +248,34 @@ def test_공통_명령어_비정상인자_기대되는출력():
     pass
 
 
-def test_FULLWRITE명령어_정상_기대되는_출력():
+def test_FULLWRITE명령어_정상_기대되는_출력(mocker: pytest_mock.MockFixture):
     # ex.
     # Shell> fullwrite 0xABCDFFFF
     # 모든LBA에 값0xABCDFFF 가 적힌다
-    #
-    pass
-
+    # LBA 0~99까지 반복되며 run_ssd_command가 호출되는지 확인
+    sut = SsdShell()
+    command = "fullwrite 0xABCDFFFF"
+    ret = sut.make_command(command)
+    assert ret == "SUCCESS"
 
 def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND():
     # ex.
     # Shell> fullwrite 0xABCF
     # INVALID COMMAND
-    pass
+    sut = SsdShell()
+    command = "fullwrite 0xABCF"
+    ret = sut.make_command(command)
+    assert ret == "INVALID COMMAND"
 
 
 def test_FULLWRITE명령어_비정상인자_0x없음_INVALID_COMMAND():
     # ex.
     # Shell> fullwrite ABCF33
     # INVALID COMMAND
-    pass
+    sut = SsdShell()
+    command = "fullwrite ABCF33"
+    ret = sut.make_command(command)
+    assert ret == "INVALID COMMAND"
 
 
 def test_FULLWRITE명령어_비정상인자_특수문자_INVALID_COMMAND():
