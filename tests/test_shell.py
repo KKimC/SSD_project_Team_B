@@ -124,15 +124,6 @@ def test_READ_LBA유효성검사_정수가아님(mocker: MockerFixture, shell):
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_READ_SSD에서_값을_읽어오는가(mocker: MockerFixture, shell):
-    pass
-
-
-def test_READ_Console에_값을_출력하는가(mocker: MockerFixture, shell):
-    # ex) Shell> read 3
-    # [READ] LBA 03 : 0x00000000
-    pass
-
 
 def test_WRITE명령어_누락된인자(mocker: MockerFixture, shell):
     # Arrange
