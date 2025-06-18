@@ -5,19 +5,40 @@ from pytest_mock import MockerFixture
 from src.ssd_shell import SsdShell
 
 
-def test_READ_명령어유효성검사_유효하지않은명령어():
-    sut = SsdShell()
-    command = "reead 3"
-    ret = sut.run(command)
+def test_READ_명령어유효성검사_유효하지않은명령어(mocker: MockerFixture):
+    wrong_input_command = ["reead 3"]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
 
-    assert ret == "INVALID COMMAND"
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
 
-def test_READ_명령어유효성검사_누락():
-    sut = SsdShell()
-    command = "3"
-    ret = sut.run_read(command)
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
 
-    assert ret == "INVALID COMMAND"
+
+def test_READ_명령어유효성검사_누락(mocker: MockerFixture):
+    wrong_input_command = ["3"]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
+
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
 
 
 def test_READ_LBA유효성검사_누락():
@@ -79,9 +100,11 @@ def test_WRITE명령어_정상인자_시스템콜명령어를잘만드는가():
 def test_WRITE명령어_시스템콜명령어를잘만드는가():
     pass
 
+
 def test_WRITE명령어_시스템콜명령어를잘만드는가():
     # ex. ssd.py write 3 0xAAAABBBB 의 CLI 명령어를 잘 만드는지
     pass
+
 
 def test_WRITE명령어_누락된인자(mocker: MockerFixture):
     # Arrange
@@ -161,9 +184,6 @@ def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_
     assert output.strip() == expected.strip()
 
 
-
-
-
 def test_WRITE명령어_유효하지않은인자_값_길이10초과_INVALID_COMMAND():
     # ex) Shell> write 3 0xAAAABBBBCC
     # INVALID COMMAND
@@ -207,9 +227,6 @@ def test_WRITE명령어_정상인자_기대되는출력물을만드는가(mocker
     assert output.strip() == expected.strip()
 
 
-
-
-
 def test_HELP명령어_정상_기대되는출력(mocker):
     # ex.
     # Shell> help
@@ -248,7 +265,7 @@ def test_공통_명령어_비정상인자_기대되는출력():
     pass
 
 
-def test_FULLWRITE명령어_정상_기대되는_출력(mocker: pytest_mock.MockFixture):
+def test_FULLWRITE명령어_정상_기대되는_출력(mocker: MockerFixture):
     # ex.
     # Shell> fullwrite 0xABCDFFFF
     # 모든LBA에 값0xABCDFFF 가 적힌다
@@ -257,6 +274,7 @@ def test_FULLWRITE명령어_정상_기대되는_출력(mocker: pytest_mock.MockF
     command = "fullwrite 0xABCDFFFF"
     ret = sut.make_command(command)
     assert ret == "SUCCESS"
+
 
 def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND():
     # ex.
