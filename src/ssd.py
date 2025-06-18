@@ -34,7 +34,7 @@ class SSD():
             self.ssd_file_manager.print_ssd_output("ERROR")
             return "ERROR"
 
-        self.nand[address] = int(value, 16)
+        self.nand[address] = value
         self.ssd_file_manager.patch_ssd_nand(self.nand)
         self.ssd_file_manager.print_ssd_output(value)
         return value

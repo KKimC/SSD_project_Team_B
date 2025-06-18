@@ -5,12 +5,11 @@ class SSDFileManager():
         if not os.path.exists('ssd_nand.txt'):
             with open('ssd_nand.txt', 'w', encoding='utf-8') as f:
                 f.writelines(["\n"] * 100)
+            self.patch_ssd_nand(["0x00000000" for _ in range(100)])
 
         if not os.path.exists('ssd_output.txt'):
             with open('ssd_output.txt', 'w', encoding='utf-8') as f:
                 f.write("")
-
-        self.patch_ssd_nand(["0x00000000" for _ in range(100)])
 
     def read_ssd_nand(self):
         with open('ssd_nand.txt', 'r', encoding='utf-8') as file:
