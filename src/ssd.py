@@ -36,7 +36,6 @@ class SSD():
 
         self.nand[address] = value
         self.ssd_file_manager.patch_ssd_nand(self.nand)
-        self.ssd_file_manager.print_ssd_output(value)
         return value
 
 def main():
