@@ -4,6 +4,10 @@ from typing import List
 from abc import abstractmethod, ABC
 
 
+class ExitException(Exception):
+    pass
+
+
 class Command(ABC):
     def __init__(self, args: List[str]):
         self.args = args
@@ -38,6 +42,14 @@ class WriteCommand(Command):
         return self._is_valid_lba(lba_address) and self._is_valid_8char_hex(write_value)
 
     def execute(self):
+        lba_address = self.args[1]
+        hex_val = self.args[2]
+
+        result = subprocess.run(
+            ["python", "ssd.py", "W", lba_address, hex_val],
+            capture_output=True,
+            text=True,
+        )
         print("[Write] Done")
 
 
@@ -57,7 +69,9 @@ class ReadCommand(Command):
 
 class FullReadCommand(Command):
     def is_valid(self) -> bool:
-        pass
+        if len(self.args) != 1:
+            return False
+        return True
 
     def execute(self):
         list_cmds = self._make_cmds_for_fullread()
@@ -85,4 +99,13 @@ class FullWriteCommand(Command):
             cmd = ["python", "ssd.py", "W", int(lba), self.args[1]]
             result = subprocess.run(cmd)
         print("[Write] Done")
-        return
+
+
+class ExitCommand(Command):
+    def is_valid(self) -> bool:
+        if len(self.args) != 1:
+            return False
+        return True
+
+    def execute(self):
+        raise ExitException
