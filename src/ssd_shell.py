@@ -44,4 +44,8 @@ class SsdShell:
     def is_invalid_read_command(self, command: list):
         if len(command) < 2:
             return True
+
+        LBA = int(command[1])
+        if LBA > 99:
+            return True
         return False
