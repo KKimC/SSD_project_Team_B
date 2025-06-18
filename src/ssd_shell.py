@@ -1,6 +1,13 @@
 import re
 
-from src.command import WriteCommand, ReadCommand, FullReadCommand, FullWriteCommand
+from src.command import (
+    WriteCommand,
+    ReadCommand,
+    FullReadCommand,
+    FullWriteCommand,
+    ExitCommand,
+    ExitException,
+)
 
 INVALID_COMMAND = "INVALID COMMAND"
 
@@ -11,10 +18,16 @@ class SsdShell:
         "write": WriteCommand,
         "fullread": FullReadCommand,
         "fullwrite": FullWriteCommand,
+        "exit": ExitCommand,
     }
 
     def __init__(self):
         self.validator = {}
+        self._is_running = True
+
+    @property
+    def is_running(self):
+        return self._is_running
 
     def _make_cmds_for_fullread(self):
         list_cmds = []
@@ -40,7 +53,10 @@ class SsdShell:
             print(INVALID_COMMAND)
             return
 
-        command.execute()
+        try:
+            command.execute()
+        except ExitException:
+            self._is_running = False
 
     def make_command(self) -> str or list[str]:
         command = input("Shell> ")

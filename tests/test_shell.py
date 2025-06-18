@@ -200,19 +200,33 @@ def test_HELP명령어_비정상_기대되는출력():
     pass
 
 
-def test_EXIT명령어_정상_기대되는출력():
+def test_EXIT명령어_정상(mocker: MockerFixture, shell):
     # ex.
     # Shell> exit
     # exit.
     # 터미널 종료
-    pass
+    mocker.patch("builtins.input", return_value="exit")
+
+    # act and assert
+    shell.run()
+
+    assert shell.is_running == False
 
 
-def test_EXIT명령어_비정상_기대되는출력():
+def test_EXIT명령어_비정상_기대되는출력(mocker: MockerFixture, shell):
     # ex.
     # Shell> exit aa
     # INVALID COMMAND
-    pass
+    wrong_input_command = [
+        "exit aa",
+        "exit 123",
+        "exit 5 6",
+    ]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
+    expected = INVALID_COMMAND
+
+    # act and assert
+    assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
 def test_공통_명령어_비정상인자_기대되는출력():
