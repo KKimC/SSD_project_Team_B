@@ -140,13 +140,16 @@ class FullReadCommand(Command):
 
     def execute(self):
         list_cmds = self._make_cmds_for_fullread()
+        env = os.environ.copy()
+        env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
         for i in range(100):
             result = subprocess.run(
                 ["python", "ssd.py", "R", f"{i}"],
                 capture_output=True,
                 text=True,
+                env=env,
             )
-            print(result.stdout)
+            print(result.stdout.strip("\n"))
 
     def _make_cmds_for_fullread(self):
         list_cmds = []
