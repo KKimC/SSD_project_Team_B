@@ -378,3 +378,25 @@ def test_PARTIAL_LBA_WRITE_실패_FAIL_WRITE_5번(mocker: MockerFixture, shell):
     # act and assert
     assert result.replace("\n", "") == "FAIL"
     assert mock_write.call_count == 5
+
+
+def test_WRITE_READ_AGING_정상_PASS_WRITE_400번(mocker: MockerFixture, shell):
+    # Arrange
+    mocker.patch("builtins.input", return_value="3_WriteReadAging")
+    mock_write = mocker.patch("src.command.WriteCommand")
+    mocker.patch.object(ScriptCommand, "_read_compare", return_value=True)
+    result = _do_run_and_get_result_from_buffer(shell)
+    # act and assert
+    assert result.replace("\n", "") == "PASS" * 400
+    assert mock_write.call_count == 400
+
+
+def test_WRITE_READ_AGING_실패_FAIL_WRITE_5번(mocker: MockerFixture, shell):
+    # Arrange
+    mocker.patch("builtins.input", return_value="3_WriteReadAging")
+    mock_write = mocker.patch("src.command.WriteCommand")
+    mocker.patch.object(ScriptCommand, "_read_compare", return_value=False)
+    result = _do_run_and_get_result_from_buffer(shell)
+    # act and assert
+    assert result.replace("\n", "") == "FAIL"
+    assert mock_write.call_count == 2

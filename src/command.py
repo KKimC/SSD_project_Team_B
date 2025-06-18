@@ -136,8 +136,11 @@ class ScriptCommand(Command):
         if self.args[0] in ["1_", "1_FullWriteAndReadCompare"]:
             self._test_script_type = "1_FullWriteAndReadCompare"
             return True
-        if len(self.args) == 1 and self.args[0] in ["2_", "2_PartialLBAWrite"]:
+        if self.args[0] in ["2_", "2_PartialLBAWrite"]:
             self._test_script_type = "2_PartialLBAWrite"
+            return True
+        if self.args[0] in ["3_", "3_WriteReadAging"]:
+            self._test_script_type = "3_WriteReadAging"
             return True
         return False
 
@@ -146,6 +149,8 @@ class ScriptCommand(Command):
             self._execute_script_1()
         elif self._test_script_type == "2_PartialLBAWrite":
             self._execute_script_2()
+        elif self._test_script_type == "3_WriteReadAging":
+            self._execute_script_3()
 
     def _execute_script_1(self):
         lba_address = 0
@@ -176,7 +181,21 @@ class ScriptCommand(Command):
                     print("FAIL")
                     raise ExitException
 
+    def _execute_script_3(self):
+        lba_address_list = [0, 99]
+        for _ in range(200):
+            write_value_list = [generate_random_hex()] * 2
+            for i, lba_address in enumerate(lba_address_list):
+                WriteCommand(["write", lba_address, write_value_list[i]]).execute()
+
+            for i, lba_address in enumerate(lba_address_list):
+                if self._read_compare(lba_address, write_value_list[i]):
+                    print("PASS")
+                else:
+                    print("FAIL")
+                    raise ExitException
+
     def _read_compare(self, lba_address: int, value: str) -> bool:
-        read_command = ReadCommand(["read", lba_address])
+        read_command = ReadCommand(["read", str(lba_address)])
         result = read_command.execute()
         return result == value

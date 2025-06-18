@@ -64,6 +64,8 @@ class SSDShell:
                 "1_FullWriteAndReadCompare",
                 "2_",
                 "2_PartialLBAWrite",
+                "3_",
+                "3_WriteReadAging",
             ]:
                 return ScriptCommand(args=command_list)
             return None
