@@ -4,6 +4,11 @@ import src.ssd
 from src.ssd import SSD
 from src.ssd_file_manager import SSDFileManager
 
+WRONG_LBA_ADDRESS = 101
+VALID_LBA_ADDRESS = 10
+VALID_WRITE_VAlUE = "0x00000000"
+INVALID_WRITE_VALUE = "0400000000"
+
 
 @pytest.fixture
 def ssd_file_manager_mk(mocker):
@@ -46,20 +51,18 @@ def test_write시_file_manager의_patch가_호출되는가(ssd_file_manager_mk, 
     ssd_file_manager_mk.patch_ssd_nand.assert_called()
 
 
-def test_write시_file_manager의_print_ssd_output에_제대로_된_값이_들어가는가(ssd_file_manager_mk, ssd_sut):
+def test_write시_정상적인경우_file_manager의_print_ssd_output함수는_한번도_호출되면_안된다(ssd_file_manager_mk, ssd_sut):
     ssd_sut.write(1, "0x00000001")
-    ssd_file_manager_mk.print_ssd_output.assert_called_with("0x00000001")
+    ssd_file_manager_mk.print_ssd_output.assert_not_called()
 
 
 def test_read명령어_잘못된_LBA범위_입력시_파일매니저의_출력하는함수를_한번_호출하는가(ssd_file_manager_mk, ssd_sut):
-    WRONG_LBA_ADDRESS = 101
     ssd_sut.read(WRONG_LBA_ADDRESS)
 
     ssd_file_manager_mk.print_ssd_output.assert_called_once()
 
 
 def test_read명령어_잘못된_LBA범위_입력시_파일매니저의_출력하는함수_인자에_ERROR를_전달하는가(ssd_file_manager_mk, ssd_sut):
-    WRONG_LBA_ADDRESS = 101
     ssd_sut.read(WRONG_LBA_ADDRESS)
 
     ssd_file_manager_mk.print_ssd_output.assert_called_once_with("ERROR")
@@ -77,17 +80,15 @@ def test_read명령어_기록한적없는_LBA_읽을시_0x00000000으로_읽는�
     assert result == "0x00000000"
     ssd_file_manager_mk.print_ssd_output.assert_called_once_with("0x00000000")
 
+
 def test_write명령어_잘못된_LBA범위_입력시_파일매니저의_출력하는함수를_한번_호출하는가(ssd_file_manager_mk, ssd_sut):
-    WRONG_LBA_ADDRESS = 101
-    WRITE_VAlUE = "0x00000000"
-    ssd_sut.write(WRONG_LBA_ADDRESS, WRITE_VAlUE)
+    ssd_sut.write(WRONG_LBA_ADDRESS, VALID_WRITE_VAlUE)
 
     ssd_file_manager_mk.print_ssd_output.assert_called_once()
 
+
 def test_write명령어_잘못된_LBA범위_입력시_파일매니저의_출력하는함수_인자에_ERROR를_전달하는가(ssd_file_manager_mk, ssd_sut):
-    WRONG_LBA_ADDRESS = 101
-    WRITE_VAlUE = "0x00000000"
-    ssd_sut.write(WRONG_LBA_ADDRESS, WRITE_VAlUE)
+    ssd_sut.write(WRONG_LBA_ADDRESS, VALID_WRITE_VAlUE)
 
     ssd_file_manager_mk.print_ssd_output.assert_called_once_with("ERROR")
 
@@ -102,9 +103,8 @@ def test_read명령어_LBA주소가_입력되지않은경우에도_정상실행�
 
 
 def test_write명령어_value가_입력되지않은경우에도_정상실행되며_출력하는함수_인자에_ERROR를_전달하는가(ssd_file_manager_mk, ssd_sut):
-    VALID_LBA = 10
     try:
-        ssd_sut.write(VALID_LBA)
+        ssd_sut.write(VALID_LBA_ADDRESS)
     except Exception as e:
         pytest.fail()
 
@@ -121,10 +121,7 @@ def test_write명령어에_인자가_없는경우에도_정상실행되며_파�
 
 
 def test_write명령어_Value가_올바르지않은경우_파일매니저의_패치함수를_호출하지않아야한다(ssd_file_manager_mk, ssd_sut):
-    LBA = 10
-    INVALID_VALUE = "0400000000"
-
-    ssd_sut.write(LBA, INVALID_VALUE)
+    ssd_sut.write(VALID_LBA_ADDRESS, INVALID_WRITE_VALUE)
 
     ssd_file_manager_mk.patch_ssd_nand.assert_not_called()
 
