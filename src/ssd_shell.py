@@ -41,7 +41,12 @@ class SSDShell:
 
     def run(self):
         command = self._parse_command()
-        if not command or not command.is_valid():
+
+        if command is None:
+            # 엔터만 입력했거나 파싱 실패한 경우
+            return
+
+        if not command.is_valid():
             print(INVALID_COMMAND)
             return
 
@@ -52,27 +57,31 @@ class SSDShell:
         return command
 
     def _parse_command(self):
-        command_str = self._make_command()
+        command_str = self._make_command().strip()
+
+        if not command_str:
+            return None  # 엔터만 입력한 경우 → 조용히 무시
+
         command_list = command_str.split()
-
-        if not command_list:
-            return None
-
         command_type = command_list[0]
-        command_class = self.COMMAND_MAP.get(command_type)
-        if not command_class:
-            if command_type in [
-                "1_",
-                "1_FullWriteAndReadCompare",
-                "2_",
-                "2_PartialLBAWrite",
-                "3_",
-                "3_WriteReadAging",
-            ]:
-                return ScriptCommand(args=command_list)
-            return None
 
-        return command_class(args=command_list)
+        # 일반 명령어
+        command_class = self.COMMAND_MAP.get(command_type)
+        if command_class:
+            return command_class(args=command_list)
+
+        # 스크립트 실행 명령어
+        if command_type in [
+            "1_",
+            "1_FullWriteAndReadCompare",
+            "2_",
+            "2_PartialLBAWrite",
+            "3_",
+            "3_WriteReadAging",
+        ]:
+            return ScriptCommand(args=command_list)
+
+        return Command(args=command_list)  # 잘못된 명령 → Command 객체 반환)
 
     def _execute_command(self, command: Command):
         try:
