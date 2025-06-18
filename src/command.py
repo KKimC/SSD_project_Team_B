@@ -5,9 +5,11 @@ import subprocess
 from typing import List
 from abc import abstractmethod, ABC
 
+
 def generate_random_hex() -> str:
     value = random.randint(0, 0xFFFFFFFF)  # 32비트 범위 (8자리)
     return f"0x{value:08X}"  # 대문자, 0으로 패딩
+
 
 HELP_TEXT = """
 AUTHOR
@@ -52,6 +54,7 @@ DESCRIPTION
     exit
         Test Shell을 종료합니다.
         사용법: exit"""
+
 
 class ExitException(Exception):
     pass
@@ -115,7 +118,6 @@ class ReadCommand(Command):
 
         env = os.environ.copy()
         env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
-
 
         result = subprocess.run(
             ["python", "ssd.py", "R", lba_address],
@@ -252,6 +254,8 @@ class ScriptCommand(Command):
         read_command = ReadCommand(["read", str(lba_address)])
         result = read_command.execute()
         return result == value
+
+
 class HelpCommand(Command):
     def is_valid(self) -> bool:
         if len(self.args) != 1:
