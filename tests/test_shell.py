@@ -5,16 +5,19 @@ from pytest_mock import MockerFixture
 from src.ssd_shell import SsdShell
 
 
-def test_READ_명령어유효성검사_유효한명령어():
-    # ex) Shell> reead 3
-    # INVALID COMMAND
-    pass
+def test_READ_명령어유효성검사_유효하지않은명령어():
+    sut = SsdShell()
+    command = "reead 3"
+    ret = sut.run(command)
 
+    assert ret == "INVALID COMMAND"
 
 def test_READ_명령어유효성검사_누락():
-    # ex) Shell> 3
-    # INVALID COMMAND
-    pass
+    sut = SsdShell()
+    command = "3"
+    ret = sut.run_read(command)
+
+    assert ret == "INVALID COMMAND"
 
 
 def test_READ_LBA유효성검사_누락():
@@ -77,7 +80,6 @@ def test_WRITE명령어_시스템콜명령어를잘만드는가():
 
     # ex. ssd.py write 3 0xAAAABBBB 의 CLI 명령어를 잘 만드는지
     pass
-
 
 def test_WRITE명령어_누락된인자(mocker: MockerFixture):
     # Arrange
@@ -157,6 +159,7 @@ def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_
     assert output.strip() == expected.strip()
 
 
+
 def test_WRITE명령어_유효하지않은인자_값_길이10초과_INVALID_COMMAND():
     # ex) Shell> write 3 0xAAAABBBBCC
     # INVALID COMMAND
@@ -198,6 +201,7 @@ def test_WRITE명령어_정상인자_기대되는출력물을만드는가(mocker
 
     # Assert
     assert output.strip() == expected.strip()
+
 
 
 def test_HELP명령어_정상_기대되는출력():

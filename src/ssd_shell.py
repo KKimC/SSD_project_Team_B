@@ -6,6 +6,9 @@ class SsdShell:
         command = self.make_command()
         command_list = command.split()
         command_type = command_list[0]
+        if command_type == "read":
+            if self.is_invalid_read_command(command):
+                return "INVALID COMMAND"
         if command_type == "write" and len(command_list) != 3:
             print("INVALID COMMAND")
             return
@@ -30,3 +33,6 @@ class SsdShell:
     def real_full_read(self):
         for i in range(100):
             self.real_read()
+
+    def is_invalid_read_command(self, command: str):
+        return True
