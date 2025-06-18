@@ -1,3 +1,8 @@
+import re
+
+INVALID_COMMAND = "INVALID COMMAND"
+
+
 class SsdShell:
     def __init__(self):
         pass
@@ -5,30 +10,26 @@ class SsdShell:
     def run(self):
         command = self.make_command()
         command_list = command.split()
+        if not command_list:
+            print(INVALID_COMMAND)
+            return
+            
         command_type = command_list[0]
 
         if command_type not in ["read", "write", "fullwrite", "fullread"]:
-            print("INVALID COMMAND")
+            print(INVALID_COMMAND)
             return
 
         if command_type == "read":
             if self.is_invalid_read_command(command_list):
-                print("INVALID COMMAND")
+                print(INVALID_COMMAND)
                 return
-
-        if command_type == "write" and len(command_list) != 3:
-            print("INVALID COMMAND")
-            return
-
-        param1, param2 = command_list[1:]
-        if int(param1) < 0 or int(param1) > 99:
-            print("INVALID COMMAND")
-            return
-        if type(param1) != int:
-            print("INVALID COMMAND")
-            return
-
-        print("[Write] Done")
+              
+        elif command_type == "write":
+            if not self._validate_write(command_list):
+                print(INVALID_COMMAND)
+                return
+            print("[Write] Done")
 
     def make_command(self) -> str:
         command = input("Shell> ")
@@ -54,3 +55,17 @@ class SsdShell:
             return True
 
         return False
+    def _validate_write(self, args):
+        if len(args) != 3:
+            return False
+        return self._is_valid_lba(args[1]) and self._is_valid_8char_hex(args[2])
+
+    def _is_valid_lba(self, value):
+        try:
+            num = int(value)
+            return 0 <= num <= 99
+        except ValueError:
+            return False
+
+    def _is_valid_8char_hex(self, write_value_str: str) -> bool:
+        return bool(re.fullmatch(r"0x[0-9a-fA-F]{8}", write_value_str))
