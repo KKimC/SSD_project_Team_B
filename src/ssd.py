@@ -22,7 +22,6 @@ class SSD():
 
         nand = self.ssd_file_manager.read_ssd_nand()
         value = nand[address]
-        print(value)
         self.ssd_file_manager.print_ssd_output(value)
         return value
 
