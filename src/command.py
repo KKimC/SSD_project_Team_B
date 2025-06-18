@@ -87,4 +87,4 @@ class ExitCommand(Command):
         return True
 
     def execute(self):
-        pass
+        raise Exception

@@ -22,6 +22,7 @@ class SsdShell:
 
     def __init__(self):
         self.validator = {}
+        self.is_running = True
 
     def _make_cmds_for_fullread(self):
         list_cmds = []
@@ -46,8 +47,10 @@ class SsdShell:
         if not command.is_valid():
             print(INVALID_COMMAND)
             return
-
-        command.execute()
+        try:
+            command.execute()
+        except Exception:
+            self.is_running = False
 
     def make_command(self) -> str or list[str]:
         command = input("Shell> ")

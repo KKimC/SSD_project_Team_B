@@ -213,12 +213,17 @@ def test_HELP명령어_비정상_기대되는출력():
     pass
 
 
-def test_EXIT명령어_정상_기대되는출력():
+def test_EXIT명령어_정상(mocker: MockerFixture, shell):
     # ex.
     # Shell> exit
     # exit.
     # 터미널 종료
-    pass
+    mocker.patch("builtins.input", return_value="exit")
+
+    # act and assert
+    shell.run()
+
+    assert shell.is_running == False
 
 
 def test_EXIT명령어_비정상_기대되는출력(mocker: MockerFixture, shell):
