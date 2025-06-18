@@ -96,9 +96,21 @@ def test_READ_LBA유효성검사_음수(mocker: MockerFixture):
 
 
 def test_READ_LBA유효성검사_정수가아님(mocker: MockerFixture):
-    # ex) Shell> read ABD
-    # INVALID COMMAND
-    pass
+    wrong_input_command = ["read abc"]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
+
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
 
 
 def test_READ_SSD에서_값을_읽어오는가(mocker: MockerFixture):

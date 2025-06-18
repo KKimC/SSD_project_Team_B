@@ -45,6 +45,10 @@ class SsdShell:
         if len(command) < 2:
             return True
 
+        LBA = command[1]
+        if not LBA.isdigit():
+            return True
+
         LBA = int(command[1])
         if LBA > 99:
             return True
