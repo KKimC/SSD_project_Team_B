@@ -1,7 +1,12 @@
 import re
+import random
 import subprocess
 from typing import List
 from abc import abstractmethod, ABC
+
+def generate_random_hex() -> str:
+    value = random.randint(0, 0xFFFFFFFF)  # 32비트 범위 (8자리)
+    return f"0x{value:08X}"  # 대문자, 0으로 패딩
 
 HELP_TEXT = """
 AUTHOR
@@ -46,7 +51,6 @@ DESCRIPTION
     exit
         Test Shell을 종료합니다.
         사용법: exit"""
-
 
 class ExitException(Exception):
     pass
@@ -166,6 +170,81 @@ class ExitCommand(Command):
         raise ExitException
 
 
+class ScriptCommand(Command):
+    def __init__(self, args: List[str]):
+        super().__init__(args)
+        self._test_script_type = ""
+
+    def is_valid(self) -> bool:
+        if len(self.args) != 1:
+            return False
+
+        if self.args[0] in ["1_", "1_FullWriteAndReadCompare"]:
+            self._test_script_type = "1_FullWriteAndReadCompare"
+            return True
+        if self.args[0] in ["2_", "2_PartialLBAWrite"]:
+            self._test_script_type = "2_PartialLBAWrite"
+            return True
+        if self.args[0] in ["3_", "3_WriteReadAging"]:
+            self._test_script_type = "3_WriteReadAging"
+            return True
+        return False
+
+    def execute(self):
+        if self._test_script_type == "1_FullWriteAndReadCompare":
+            self._execute_script_1()
+        elif self._test_script_type == "2_PartialLBAWrite":
+            self._execute_script_2()
+        elif self._test_script_type == "3_WriteReadAging":
+            self._execute_script_3()
+
+    def _execute_script_1(self):
+        lba_address = 0
+        while lba_address < 100:
+            write_value_list = [generate_random_hex() for _ in range(5)]
+            for value in write_value_list:
+                command_list = ["write", str(lba_address), value]
+                WriteCommand(command_list).execute()
+                if self._read_compare(lba_address, value):
+                    print("PASS")
+                else:
+                    print("FAIL")
+                    raise ExitException
+                lba_address += 1
+
+    def _execute_script_2(self):
+        for _ in range(30):
+            write_value = generate_random_hex()
+            lba_address_list = [4, 0, 3, 1, 2]
+            for write_lba_address in lba_address_list:
+                command_list = ["write", str(write_lba_address), write_value]
+                WriteCommand(command_list).execute()
+
+            for read_lba_address in range(5):
+                if self._read_compare(read_lba_address, write_value):
+                    print("PASS")
+                else:
+                    print("FAIL")
+                    raise ExitException
+
+    def _execute_script_3(self):
+        lba_address_list = [0, 99]
+        for _ in range(200):
+            write_value_list = [generate_random_hex()] * 2
+            for i, lba_address in enumerate(lba_address_list):
+                WriteCommand(["write", lba_address, write_value_list[i]]).execute()
+
+            for i, lba_address in enumerate(lba_address_list):
+                if self._read_compare(lba_address, write_value_list[i]):
+                    print("PASS")
+                else:
+                    print("FAIL")
+                    raise ExitException
+
+    def _read_compare(self, lba_address: int, value: str) -> bool:
+        read_command = ReadCommand(["read", str(lba_address)])
+        result = read_command.execute()
+        return result == value
 class HelpCommand(Command):
     def is_valid(self) -> bool:
         if len(self.args) != 1:

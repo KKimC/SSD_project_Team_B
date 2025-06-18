@@ -7,6 +7,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from src.ssd_shell import SSDShell
+from src.command import ScriptCommand
 
 INVALID_COMMAND = "INVALID COMMAND"
 HELP_TEXT = """
@@ -374,6 +375,81 @@ def test_FULLREAD명령어_정상인자_기대되는_출력(mocker: MockerFixtur
     assert matched == True
 
 
+def test_FULLREAD명령어_비정상인자_불필요인자_INVALID_COMMAND(
+    mocker: MockerFixture, shell
+):
+    # ex.
+    # Shell> fullread 0xABCFF
+    # INVALID COMMAND
+    # 뒤에 뭐 있기만 해도 에러나야함
+    pass
+
+
+def test_FULLWRITE_AND_READ_COMPARE_정상_PASS_100번(mocker: MockerFixture, shell):
+    # Arrange
+    mocker.patch("builtins.input", return_value="1_FullWriteAndReadCompare")
+    mock_write = mocker.patch("src.command.WriteCommand")
+    mocker.patch.object(ScriptCommand, "_read_compare", return_value=True)
+    result = _do_run_and_get_result_from_buffer(shell)
+    # act and assert
+    assert result.replace("\n", "") == "PASS" * 100
+    assert mock_write.call_count == 100
+
+
+def test_FULLWRITE_AND_READ_COMPARE_실패_FAIL_1번(mocker: MockerFixture, shell):
+    # Arrange
+    mocker.patch("builtins.input", return_value="1_FullWriteAndReadCompare")
+    mock_write = mocker.patch("src.command.WriteCommand")
+    mocker.patch.object(ScriptCommand, "_read_compare", return_value=False)
+    result = _do_run_and_get_result_from_buffer(shell)
+    # act and assert
+    assert result.replace("\n", "") == "FAIL"
+    assert mock_write.call_count == 1
+
+
+def test_PARTIAL_LBA_WRITE_정상_PASS_WRITE_150번(mocker: MockerFixture, shell):
+    # Arrange
+    mocker.patch("builtins.input", return_value="2_PartialLBAWrite")
+    mock_write = mocker.patch("src.command.WriteCommand")
+    mocker.patch.object(ScriptCommand, "_read_compare", return_value=True)
+    result = _do_run_and_get_result_from_buffer(shell)
+    # act and assert
+    assert result.replace("\n", "") == "PASS" * 150
+    assert mock_write.call_count == 150
+
+
+def test_PARTIAL_LBA_WRITE_실패_FAIL_WRITE_5번(mocker: MockerFixture, shell):
+    # Arrange
+    mocker.patch("builtins.input", return_value="2_PartialLBAWrite")
+    mock_write = mocker.patch("src.command.WriteCommand")
+    mocker.patch.object(ScriptCommand, "_read_compare", return_value=False)
+    result = _do_run_and_get_result_from_buffer(shell)
+    # act and assert
+    assert result.replace("\n", "") == "FAIL"
+    assert mock_write.call_count == 5
+
+
+def test_WRITE_READ_AGING_정상_PASS_WRITE_400번(mocker: MockerFixture, shell):
+    # Arrange
+    mocker.patch("builtins.input", return_value="3_WriteReadAging")
+    mock_write = mocker.patch("src.command.WriteCommand")
+    mocker.patch.object(ScriptCommand, "_read_compare", return_value=True)
+    result = _do_run_and_get_result_from_buffer(shell)
+    # act and assert
+    assert result.replace("\n", "") == "PASS" * 400
+    assert mock_write.call_count == 400
+
+
+def test_WRITE_READ_AGING_실패_FAIL_WRITE_5번(mocker: MockerFixture, shell):
+    # Arrange
+    mocker.patch("builtins.input", return_value="3_WriteReadAging")
+    mock_write = mocker.patch("src.command.WriteCommand")
+    mocker.patch.object(ScriptCommand, "_read_compare", return_value=False)
+    result = _do_run_and_get_result_from_buffer(shell)
+    # act and assert
+    assert result.replace("\n", "") == "FAIL"
+    assert mock_write.call_count == 2
+
 def test_FULLREAD_reads를_형식에_맞게_보내는지(mocker: MockerFixture, shell):
     mocker.patch("builtins.input", return_value="fullread")
     expected_line_num = 100
@@ -386,3 +462,4 @@ def test_FULLREAD_reads를_형식에_맞게_보내는지(mocker: MockerFixture, 
         actual_call = mock_subprocess.call_args_list[i]
         actual_args = actual_call.args[0]
         assert actual_args == expected_cmd, f"LBA {i} 에서 명령어 불일치: {actual_args}"
+
