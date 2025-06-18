@@ -4,13 +4,53 @@ import subprocess
 from typing import List
 from abc import abstractmethod, ABC
 
-import random
-
-
 def generate_random_hex() -> str:
     value = random.randint(0, 0xFFFFFFFF)  # 32비트 범위 (8자리)
     return f"0x{value:08X}"  # 대문자, 0으로 패딩
 
+HELP_TEXT = """
+AUTHOR
+    비긴어게인 팀 제작자: 김성현, 강태윤, 임동혁, 김남민, 김기웅, 정보람, 김민규
+
+NAME
+    Test Shell - SSD 가상 장치 테스트용 커맨드 라인 셸
+
+SYNOPSIS
+    write [LBA] [VALUE]
+    read [LBA]
+    fullwrite [VALUE]
+    fullread
+    help
+    exit
+
+DESCRIPTION
+
+    write
+        지정한 LBA 주소에 값을 기록합니다.
+        사용법: write [LBA 번호] [저장할 값]
+        예시:  write 3 0xAAAABBBB
+
+    read
+        지정한 LBA 주소에서 값을 읽어 출력합니다.
+        사용법: read [LBA 번호]
+        예시:  read 3
+
+    fullwrite
+        전체 LBA(0~99)에 동일한 값을 기록합니다.
+        사용법: fullwrite [저장할 값]
+        예시:  fullwrite 0xABCDFFFF
+
+    fullread
+        전체 LBA(0~99)에서 값을 읽어 순차적으로 출력합니다.
+        사용법: fullread
+
+    help
+        명령어 목록 및 설명과 제작자 정보를 출력합니다.
+        사용법: help
+
+    exit
+        Test Shell을 종료합니다.
+        사용법: exit"""
 
 class ExitException(Exception):
     pass
@@ -89,7 +129,12 @@ class FullReadCommand(Command):
     def execute(self):
         list_cmds = self._make_cmds_for_fullread()
         for i in range(100):
-            print("0x00000000")
+            result = subprocess.run(
+                ["python", "ssd.py", "R", f"{i}"],
+                capture_output=True,
+                text=True,
+            )
+            print(result.stdout)
 
     def _make_cmds_for_fullread(self):
         list_cmds = []
@@ -109,9 +154,10 @@ class FullWriteCommand(Command):
 
     def execute(self):
         for lba in range(100):
-            cmd = ["python", "ssd.py", "W", int(lba), self.args[1]]
+            cmd = ["python", "ssd.py", "W", str(lba), self.args[1]]
             result = subprocess.run(cmd)
         print("[Write] Done")
+        return
 
 
 class ExitCommand(Command):
@@ -199,3 +245,12 @@ class ScriptCommand(Command):
         read_command = ReadCommand(["read", str(lba_address)])
         result = read_command.execute()
         return result == value
+class HelpCommand(Command):
+    def is_valid(self) -> bool:
+        if len(self.args) != 1:
+            return False
+        return True
+
+    def execute(self):
+        print(HELP_TEXT)
+        return

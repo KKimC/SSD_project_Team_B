@@ -1,6 +1,8 @@
 import io
 import re
 import sys
+from subprocess import CompletedProcess
+
 import pytest
 from pytest_mock import MockerFixture
 
@@ -8,6 +10,49 @@ from src.ssd_shell import SSDShell
 from src.command import ScriptCommand
 
 INVALID_COMMAND = "INVALID COMMAND"
+HELP_TEXT = """
+AUTHOR
+    비긴어게인 팀 제작자: 김성현, 강태윤, 임동혁, 김남민, 김기웅, 정보람, 김민규
+
+NAME
+    Test Shell - SSD 가상 장치 테스트용 커맨드 라인 셸
+
+SYNOPSIS
+    write [LBA] [VALUE]
+    read [LBA]
+    fullwrite [VALUE]
+    fullread
+    help
+    exit
+
+DESCRIPTION
+
+    write
+        지정한 LBA 주소에 값을 기록합니다.
+        사용법: write [LBA 번호] [저장할 값]
+        예시:  write 3 0xAAAABBBB
+
+    read
+        지정한 LBA 주소에서 값을 읽어 출력합니다.
+        사용법: read [LBA 번호]
+        예시:  read 3
+
+    fullwrite
+        전체 LBA(0~99)에 동일한 값을 기록합니다.
+        사용법: fullwrite [저장할 값]
+        예시:  fullwrite 0xABCDFFFF
+
+    fullread
+        전체 LBA(0~99)에서 값을 읽어 순차적으로 출력합니다.
+        사용법: fullread
+
+    help
+        명령어 목록 및 설명과 제작자 정보를 출력합니다.
+        사용법: help
+
+    exit
+        Test Shell을 종료합니다.
+        사용법: exit"""
 
 
 def _do_run_and_get_result_from_buffer(shell):
@@ -128,9 +173,7 @@ def test_WRITE명령어_유효하지않은인자_INVALID_COMMAND(mocker: MockerF
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAND(
-    mocker: MockerFixture, shell
-):
+def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAND(mocker: MockerFixture, shell):
     # ex) Shell> write 200 0xAAAABBBB
     # INVALID COMMAND
     # Arrange
@@ -141,9 +184,7 @@ def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAN
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_COMMAND(
-    mocker: MockerFixture, shell
-):
+def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_COMMAND(mocker: MockerFixture, shell):
     # ex) Shell> write ABC 0xAAAABBBB
     # INVALID COMMAND
     mocker.patch("builtins.input", return_value="write 1.5 0xAAAABBBB")
@@ -185,20 +226,27 @@ def test_WRITE명령어_정상인자_기대되는출력물을만드는가(mocker
     )
 
 
-def test_HELP명령어_정상_기대되는출력():
+def test_HELP명령어_정상_기대되는출력(mocker: MockerFixture, shell):
     # ex.
     # Shell> help
     # 제작자: 김성현, 강태윤, 임동혁, 김기웅, 김남민, 정보람, 김민규
     # write command - write 200 0xaaaabbbb ...등등
+    mocker.patch("builtins.input", return_value="help")
+    expected = HELP_TEXT
 
-    pass
+    # act and assert
+    assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_HELP명령어_비정상_기대되는출력():
+def test_HELP명령어_비정상_기대되는출력(mocker: MockerFixture, shell):
     # ex.
     # Shell> help aa
     # INVALID COMMAND
-    pass
+    mocker.patch("builtins.input", return_value="help 1")
+    expected = INVALID_COMMAND
+
+    # act and assert
+    assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
 def test_EXIT명령어_정상(mocker: MockerFixture, shell):
@@ -250,9 +298,7 @@ def test_FULLWRITE명령어_정상_기대되는_출력(mocker: MockerFixture, sh
     assert mock_subprocess.call_count == 100
 
 
-def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND(
-    mocker: MockerFixture, shell
-):
+def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND(mocker: MockerFixture, shell):
     # ex.
     # Shell> fullwrite 0xABCF
     # INVALID COMMAND
@@ -263,9 +309,7 @@ def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND(
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_FULLWRITE명령어_비정상인자_0x없음_INVALID_COMMAND(
-    mocker: MockerFixture, shell
-):
+def test_FULLWRITE명령어_비정상인자_0x없음_INVALID_COMMAND(mocker: MockerFixture, shell):
     # ex.
     # Shell> fullwrite ABCF33
     # INVALID COMMAND
@@ -276,9 +320,7 @@ def test_FULLWRITE명령어_비정상인자_0x없음_INVALID_COMMAND(
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_FULLWRITE명령어_비정상인자_특수문자_INVALID_COMMAND(
-    mocker: MockerFixture, shell
-):
+def test_FULLWRITE명령어_비정상인자_특수문자_INVALID_COMMAND(mocker: MockerFixture, shell):
     # ex.
     # Shell> fullwrite 0x!@#$@@@
     # INVALID COMMAND
@@ -314,6 +356,13 @@ def _make_100_reads():
 def test_FULLREAD명령어_정상인자_기대되는_출력(mocker: MockerFixture, shell):
     mocker.patch("builtins.input", return_value="fullread")
     expected_line_num = 100
+    mock_subprocess = mocker.patch("src.command.subprocess.run")
+    mock_subprocess.return_value = CompletedProcess(
+        args=["python", "ssd.py", "R", "0"],
+        returncode=0,
+        stderr="",
+        stdout="0x00000000",
+    )
     arr_response = _do_run_and_get_result_from_buffer(shell).strip().splitlines()
     assert len(arr_response) == expected_line_num
 
@@ -400,3 +449,17 @@ def test_WRITE_READ_AGING_실패_FAIL_WRITE_5번(mocker: MockerFixture, shell):
     # act and assert
     assert result.replace("\n", "") == "FAIL"
     assert mock_write.call_count == 2
+
+def test_FULLREAD_reads를_형식에_맞게_보내는지(mocker: MockerFixture, shell):
+    mocker.patch("builtins.input", return_value="fullread")
+    expected_line_num = 100
+    mock_subprocess = mocker.patch("src.command.subprocess.run")
+    arr_response = _do_run_and_get_result_from_buffer(shell).strip().splitlines()
+    assert len(arr_response) == expected_line_num
+
+    for i, response in enumerate(arr_response):
+        expected_cmd = ["python", "ssd.py", "R", f"{i}"]
+        actual_call = mock_subprocess.call_args_list[i]
+        actual_args = actual_call.args[0]
+        assert actual_args == expected_cmd, f"LBA {i} 에서 명령어 불일치: {actual_args}"
+

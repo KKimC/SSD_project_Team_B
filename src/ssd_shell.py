@@ -7,6 +7,7 @@ from src.command import (
     FullWriteCommand,
     ExitCommand,
     ExitException,
+    HelpCommand,
     Command,
     ScriptCommand,
 )
@@ -21,6 +22,7 @@ class SSDShell:
         "fullread": FullReadCommand,
         "fullwrite": FullWriteCommand,
         "exit": ExitCommand,
+        "help": HelpCommand,
     }
 
     def __init__(self):
