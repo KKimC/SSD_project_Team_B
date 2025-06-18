@@ -313,6 +313,8 @@ def _make_100_reads():
 def test_FULLREAD명령어_정상인자_기대되는_출력(mocker: MockerFixture, shell):
     mocker.patch("builtins.input", return_value="fullread")
     expected_line_num = 100
+    mock_subprocess = mocker.patch("src.command.subprocess.run")
+    mock_subprocess.return_value = "0x00000000"
     arr_response = _do_run_and_get_result_from_buffer(shell).strip().splitlines()
     assert len(arr_response) == expected_line_num
 
@@ -325,9 +327,15 @@ def test_FULLREAD명령어_정상인자_기대되는_출력(mocker: MockerFixtur
     assert matched == True
 
 
-def test_FULLREAD명령어_비정상인자_불필요인자_INVALID_COMMAND():
-    # ex.
-    # Shell> fullread 0xABCFF
-    # INVALID COMMAND
-    # 뒤에 뭐 있기만 해도 에러나야함
-    pass
+def test_FULLREAD_reads를_형식에_맞게_보내는지(mocker: MockerFixture, shell):
+    mocker.patch("builtins.input", return_value="fullread")
+    expected_line_num = 100
+    mock_subprocess = mocker.patch("src.command.subprocess.run")
+    arr_response = _do_run_and_get_result_from_buffer(shell).strip().splitlines()
+    assert len(arr_response) == expected_line_num
+
+    for i, response in enumerate(arr_response):
+        expected_cmd = ["python", "ssd.py", "R", f"{i}"]
+        actual_call = mock_subprocess.call_args_list[i]
+        actual_args = actual_call.args[0]
+        assert actual_args == expected_cmd, f"LBA {i} 에서 명령어 불일치: {actual_args}"
