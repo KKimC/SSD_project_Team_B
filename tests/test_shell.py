@@ -1,3 +1,6 @@
+from src.ssd_shell import SsdShell
+
+
 def test_READ_명령어유효성검사_유효한명령어():
     # ex) Shell> reead 3
     # INVALID COMMAND
