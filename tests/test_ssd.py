@@ -79,14 +79,14 @@ def test_read명령어_기록한적없는_LBA_읽을시_0x00000000으로_읽는�
 
 def test_write명령어_잘못된_LBA범위_입력시_파일매니저의_출력하는함수를_한번_호출하는가(ssd_file_manager_mk, ssd_sut):
     WRONG_LBA_ADDRESS = 101
-    WRITE_VAlUE = '0x00000000'
+    WRITE_VAlUE = "0x00000000"
     ssd_sut.write(WRONG_LBA_ADDRESS, WRITE_VAlUE)
 
     ssd_file_manager_mk.print_ssd_output.assert_called_once()
 
 def test_write명령어_잘못된_LBA범위_입력시_파일매니저의_출력하는함수_인자에_ERROR를_전달하는가(ssd_file_manager_mk, ssd_sut):
     WRONG_LBA_ADDRESS = 101
-    WRITE_VAlUE = '0x00000000'
+    WRITE_VAlUE = "0x00000000"
     ssd_sut.write(WRONG_LBA_ADDRESS, WRITE_VAlUE)
 
     ssd_file_manager_mk.print_ssd_output.assert_called_once_with("ERROR")
