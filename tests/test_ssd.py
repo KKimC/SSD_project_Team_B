@@ -1,5 +1,6 @@
 import pytest
-
+import sys
+import src.ssd
 from src.ssd import SSD
 from src.ssd_file_manager import SSDFileManager
 
@@ -93,3 +94,21 @@ def test_Write명령어_Value가_올바르지않은경우_파일매니저의_패
     ssd_sut.Write(LBA, INVALID_VALUE)
 
     ssd_file_manager_mk.patch_ssd_nand.assert_not_called()
+
+
+def test_ssd모듈의_Read함수는_cmd에서_R명령어로_정상적으로_실행되어야한다(mocker):
+    test_args = ['ssd.py', 'R', '2']
+    mocker.patch('sys.argv', test_args)
+    ssd_read_mock = mocker.patch('src.ssd.SSD.read')
+    src.ssd.main()
+
+    ssd_read_mock.assert_called_once_with(2)
+
+
+def test_ssd모듈의_write함수는_cmd에서_W명령어로_정상적으로_실행되어야한다(mocker):
+    test_args = ['ssd.py', 'W', '2', '0xAAAABBBB']
+    mocker.patch('sys.argv', test_args)
+    ssd_write_mock = mocker.patch('src.ssd.SSD.write')
+    src.ssd.main()
+
+    ssd_write_mock.assert_called_once_with(2, 0xAAAABBBB)

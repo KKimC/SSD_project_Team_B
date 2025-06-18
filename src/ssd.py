@@ -46,3 +46,6 @@ class SSD():
         if 0 <= address < len(self.nand):
             return self.nand[address]
         return 0  # out-of-bound read 기본 처리
+
+def main():
+    pass
