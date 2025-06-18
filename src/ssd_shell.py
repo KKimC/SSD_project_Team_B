@@ -7,12 +7,13 @@ from src.command import (
     FullWriteCommand,
     ExitCommand,
     ExitException,
+    Command,
 )
 
 INVALID_COMMAND = "INVALID COMMAND"
 
 
-class SsdShell:
+class SSDShell:
     COMMAND_MAP = {
         "read": ReadCommand,
         "write": WriteCommand,
@@ -36,34 +37,39 @@ class SsdShell:
         return list_cmds
 
     def run(self):
-        command_str = self.make_command()
-        command_list = command_str.split()
-        if not command_list:
+        command = self._parse_command()
+        if not command or not command.is_valid():
             print(INVALID_COMMAND)
             return
+
+        self._execute_command(command)
+
+    def _make_command(self) -> str or list[str]:
+        command = input("Shell> ")
+        return command
+
+    def _parse_command(self):
+        command_str = self._make_command()
+        command_list = command_str.split()
+
+        if not command_list:
+            return None
 
         command_type = command_list[0]
         command_class = self.COMMAND_MAP.get(command_type)
         if not command_class:
-            print(INVALID_COMMAND)
-            return
+            return None
 
-        command = command_class(args=command_list)
-        if not command.is_valid():
-            print(INVALID_COMMAND)
-            return
+        return command_class(args=command_list)
 
+    def _execute_command(self, command: Command):
         try:
             command.execute()
         except ExitException:
             self._is_running = False
 
-    def make_command(self) -> str or list[str]:
-        command = input("Shell> ")
-        return command
-
 
 if __name__ == "__main__":
-    shell = SsdShell()
+    shell = SSDShell()
     while shell.is_running:
         shell.run()
