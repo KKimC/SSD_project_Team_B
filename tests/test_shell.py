@@ -2,72 +2,140 @@ import io
 import sys
 import pytest
 from pytest_mock import MockerFixture
+
 from src.ssd_shell import SsdShell
 
 
-def test_READ_명령어유효성검사_유효하지않은명령어():
-    sut = SsdShell()
-    command = "reead 3"
-    ret = sut.run(command)
+def test_READ_명령어유효성검사_유효하지않은명령어(mocker: MockerFixture):
+    wrong_input_command = ["reead 3"]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
 
-    assert ret == "INVALID COMMAND"
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
 
 
-def test_READ_명령어유효성검사_누락():
-    sut = SsdShell()
-    command = "3"
-    ret = sut.run_read(command)
+def test_READ_명령어유효성검사_누락(mocker: MockerFixture):
+    wrong_input_command = ["3"]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
 
-    assert ret == "INVALID COMMAND"
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
 
 
-def test_READ_LBA유효성검사_누락():
-    # ex) Shell> read
-    # INVALID COMMAND
+def test_READ_LBA유효성검사_누락(mocker: MockerFixture):
+    wrong_input_command = ["read"]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
+
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
+
+
+def test_READ_LBA유효성검사_100초과(mocker: MockerFixture):
+    wrong_input_command = ["read 999"]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
+
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
+
+
+def test_READ_LBA유효성검사_음수(mocker: MockerFixture):
+    wrong_input_command = ["read -1"]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
+
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
+
+
+def test_READ_LBA유효성검사_정수가아님(mocker: MockerFixture):
+    wrong_input_command = ["read abc"]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
+
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
+
+
+def test_READ_SSD에서_값을_읽어오는가(mocker: MockerFixture):
     pass
 
 
-def test_READ_LBA유효성검사_100초과():
-    # ex) Shell> read 999
-    # INVALID COMMAND
-    pass
-
-
-def test_READ_LBA유효성검사_음수():
-    # ex) Shell> read -1
-    # INVALID COMMAND
-    pass
-
-
-def test_READ_LBA유효성검사_정수가아님():
-    # ex) Shell> read ABD
-    # INVALID COMMAND
-    pass
-
-
-def test_READ_SSD에서_값을_읽어오는가():
-    pass
-
-
-def test_READ_Console에_값을_출력하는가():
+def test_READ_Console에_값을_출력하는가(mocker: MockerFixture):
     # ex) Shell> read 3
     # [READ] LBA 03 : 0x00000000
     pass
 
 
-def test_READ_비어있는_LBA에서_읽은값이_0x00000000인가():
+def test_READ_비어있는_LBA에서_읽은값이_0x00000000인가(mocker: MockerFixture):
     # ex) Shell> read 3
     # 0x00000000
     pass
 
 
-def test_READ_txt파일이_없을때_읽은값이_0x00000000인가():
+def test_READ_txt파일이_없을때_읽은값이_0x00000000인가(mocker: MockerFixture):
     # ex) Shell> read 3
     # 0x00000000
     pass
 
 
-def test_READ_정상적인_값을_출력하는가():
+def test_READ_정상적인_값을_출력하는가(mocker: MockerFixture):
     # ex) Shell> read 3
     # 0x00000000
     pass
@@ -163,23 +231,30 @@ def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_
     # Assert
     assert output.strip() == expected.strip()
 
+def test_WRITE명령어_유효하지않은인자_값_INVALID_COMMAND(
+    mocker: MockerFixture,
+):
+    wrong_input_command = [
+        "write 3 xxAAAABBBB",  # 0x가 없는경우
+        "write 3 AAAABBBB12",
+        "write 3 0xXXXXYYYY",  # 허용되지 않는 문자 포함
+        "write 3 0xXQWEdf12",
+        "write 3 0xAAAABBBB11",  # 길이 초과
+        "write 3 0x111111111111111111111",
+    ]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
 
-def test_WRITE명령어_유효하지않은인자_값_길이10초과_INVALID_COMMAND():
-    # ex) Shell> write 3 0xAAAABBBBCC
-    # INVALID COMMAND
-    pass
-
-
-def test_WRITE명령어_유효하지않은인자_값_0x가앞에없음_INVALID_COMMAND():
-    # ex) Shell> write 3 AAAABBBB
-    # INVALID COMMAND
-    pass
-
-
-def test_WRITE명령어_유효하지않은인자_허용되지않은문자포함_INVALID_COMMAND():
-    # ex) Shell> write 3 0xXXXXYYYY
-    # INVALID COMMAND
-    pass
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
 
 
 def test_WRITE명령어_정상동작시_실제로파일에저장되는가():
