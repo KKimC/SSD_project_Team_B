@@ -2,6 +2,7 @@ import io
 import sys
 import pytest
 from pytest_mock import MockerFixture
+
 from src.ssd_shell import SsdShell
 
 
@@ -11,6 +12,7 @@ def test_READ_명령어유효성검사_유효하지않은명령어():
     ret = sut.run(command)
 
     assert ret == "INVALID COMMAND"
+
 
 def test_READ_명령어유효성검사_누락():
     sut = SsdShell()
@@ -79,9 +81,11 @@ def test_WRITE명령어_정상인자_시스템콜명령어를잘만드는가():
 def test_WRITE명령어_시스템콜명령어를잘만드는가():
     pass
 
+
 def test_WRITE명령어_시스템콜명령어를잘만드는가():
     # ex. ssd.py write 3 0xAAAABBBB 의 CLI 명령어를 잘 만드는지
     pass
+
 
 def test_WRITE명령어_누락된인자(mocker: MockerFixture):
     # Arrange
@@ -161,25 +165,30 @@ def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_
     assert output.strip() == expected.strip()
 
 
+def test_WRITE명령어_유효하지않은인자_값_INVALID_COMMAND(
+    mocker: MockerFixture,
+):
+    wrong_input_command = [
+        "write 3 xxAAAABBBB",  # 0x가 없는경우
+        "write 3 AAAABBBB12",
+        "write 3 0xXXXXYYYY",  # 허용되지 않는 문자 포함
+        "write 3 0xXQWEdf12",
+        "write 3 0xAAAABBBB11",  # 길이 초과
+        "write 3 0x111111111111111111111",
+    ]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
 
-
-
-def test_WRITE명령어_유효하지않은인자_값_길이10초과_INVALID_COMMAND():
-    # ex) Shell> write 3 0xAAAABBBBCC
-    # INVALID COMMAND
-    pass
-
-
-def test_WRITE명령어_유효하지않은인자_값_0x가앞에없음_INVALID_COMMAND():
-    # ex) Shell> write 3 AAAABBBB
-    # INVALID COMMAND
-    pass
-
-
-def test_WRITE명령어_유효하지않은인자_허용되지않은문자포함_INVALID_COMMAND():
-    # ex) Shell> write 3 0xXXXXYYYY
-    # INVALID COMMAND
-    pass
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
 
 
 def test_WRITE명령어_정상동작시_실제로파일에저장되는가():
@@ -205,9 +214,6 @@ def test_WRITE명령어_정상인자_기대되는출력물을만드는가(mocker
 
     # Assert
     assert output.strip() == expected.strip()
-
-
-
 
 
 def test_HELP명령어_정상_기대되는출력(mocker):
@@ -248,7 +254,7 @@ def test_공통_명령어_비정상인자_기대되는출력():
     pass
 
 
-def test_FULLWRITE명령어_정상_기대되는_출력(mocker: pytest_mock.MockFixture):
+def test_FULLWRITE명령어_정상_기대되는_출력(mocker: MockerFixture):
     # ex.
     # Shell> fullwrite 0xABCDFFFF
     # 모든LBA에 값0xABCDFFF 가 적힌다
@@ -257,6 +263,7 @@ def test_FULLWRITE명령어_정상_기대되는_출력(mocker: pytest_mock.MockF
     command = "fullwrite 0xABCDFFFF"
     ret = sut.make_command(command)
     assert ret == "SUCCESS"
+
 
 def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND():
     # ex.
