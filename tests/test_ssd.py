@@ -21,19 +21,21 @@ def test_ssd_객체_선언_후_처음_read할때_0이_반환되는가(ssd_file_m
     assert ssd_sut.read(100) == 0
 
 def test_read가_output에_제대로_된_값을_전달하는가(ssd_file_manager_mk, ssd_sut):
-    pass
+    ssd_sut.read(1)
+    ssd_file_manager_mk.read_ssd_nand.side_effect = ["0x00000001" for _ in range(100)]
+    ssd_file_manager_mk.print_ssd_output.assert_called_with("0x00000001")
 
-def test_read가_제대로_된_값을_리턴하는가():
-    pass
+def test_read가_제대로_된_값을_리턴하는가(ssd_file_manager_mk, ssd_sut):
+    ssd_file_manager_mk.read_ssd_nand.side_effect = ["0x00000001" for _ in range(100)]
+    assert ssd_sut.read(1) == "0x00000001"
 
-def test_write시_file_manager의_patch가_호출되는가():
-    pass
+def test_write시_file_manager의_patch가_호출되는가(ssd_file_manager_mk, ssd_sut):
+    ssd_sut.write(1, "0x00000001")
+    ssd_file_manager_mk.write_ssd_nand.assert_called()
 
-def test_write시_file_manager의_print_ssd_output에_제대로_된_값이_들어가는가():
-    pass
-
-def test_write시_nand에_제대로_된_값이_들어가는가():
-    pass
+def test_write시_file_manager의_print_ssd_output에_제대로_된_값이_들어가는가(ssd_file_manager_mk, ssd_sut):
+    ssd_sut.write(1, "0x00000001")
+    ssd_file_manager_mk.print_ssd_output.assert_called_with("0x00000001")
 
 def test_Read명령어_잘못된_LBA범위_입력시_파일매니저의_출력하는함수를_한번_호출하는가(ssd_file_manager_mk, ssd_sut):
     WRONG_LBA_ADDRESS = 101
