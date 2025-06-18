@@ -160,6 +160,7 @@ def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_
 
 
 
+
 def test_WRITE명령어_유효하지않은인자_값_길이10초과_INVALID_COMMAND():
     # ex) Shell> write 3 0xAAAABBBBCC
     # INVALID COMMAND
@@ -201,6 +202,7 @@ def test_WRITE명령어_정상인자_기대되는출력물을만드는가(mocker
 
     # Assert
     assert output.strip() == expected.strip()
+
 
 
 
@@ -286,17 +288,23 @@ def test_FULLWRITE명령어_정상인자_실제로파일저장확인():
 
 
 def test_FULLREAD명령어_정상인자_기대되는_출력():
-    # ex.
-    # Shell> fullread
-    # 모든 값 화면 출력...
-    # 0
-    # 0xABCDABCD
-    # 1
-    # 0xABCDABCD
-    # 2
-    # 0xABCDABCD
-    # ... 100까지
-    pass
+    shell = SsdShell()
+    list_cmd = shell.make_command("fullread")
+    matched = True
+    assert len(list_cmd) == 100
+    for cmd in list_cmd:
+        if not cmd.startswith("ssd.py R "):
+            matched = False
+            break
+        params = cmd.split("ssd.py R ")
+        if len(params) != 2:
+            matched = False
+            break
+        if not params[1].isdigit():
+            matched = False
+            break
+
+    assert matched == True
 
 
 def test_FULLREAD명령어_비정상인자_불필요인자_INVALID_COMMAND():
