@@ -1,4 +1,5 @@
 import re
+import subprocess
 from typing import List
 from abc import abstractmethod, ABC
 
@@ -8,10 +9,12 @@ class Command(ABC):
         self.args = args
 
     @abstractmethod
-    def is_valid(self) -> bool: ...
+    def is_valid(self) -> bool:
+        ...
 
     @abstractmethod
-    def execute(self): ...
+    def execute(self):
+        ...
 
     def _is_valid_8char_hex(self, write_value_str: str) -> bool:
         return bool(re.fullmatch(r"0x[0-9a-fA-F]{8}", write_value_str))
@@ -25,7 +28,6 @@ class Command(ABC):
 
 
 class WriteCommand(Command):
-
     def __init__(self, args: List[str]):
         super().__init__(args)
 
@@ -70,9 +72,17 @@ class FullReadCommand(Command):
 
 
 class FullWriteCommand(Command):
+    def __init__(self, args: List[str]):
+        super().__init__(args)
 
     def is_valid(self) -> bool:
-        return False
+        if len(self.args) != 2:
+            return False
+        return self._is_valid_8char_hex(self.args[1])
 
     def execute(self):
+        for lba in range(100):
+            cmd = ["python", "ssd.py", int(lba), self.args[1]]
+            result = subprocess.run(cmd)
         print("[Write] Done")
+        return
