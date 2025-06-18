@@ -92,9 +92,8 @@ class WriteCommand(Command):
         return self._is_valid_lba(lba_address) and self._is_valid_8char_hex(write_value)
 
     def execute(self):
-        lba_address = self.args[1]
+        lba_address = str(self.args[1])
         hex_val = self.args[2]
-
         result = subprocess.run(
             ["python", "ssd.py", "W", lba_address, hex_val],
             capture_output=True,
@@ -114,7 +113,10 @@ class ReadCommand(Command):
         return self._is_valid_lba(self.args[1])
 
     def execute(self):
-        lba_address = self.args[1]
+        lba_address = str(self.args[1])
+
+        env = os.environ.copy()
+        env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
 
         env = os.environ.copy()
         env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
@@ -127,6 +129,7 @@ class ReadCommand(Command):
         )
         read_value = result.stdout
         print(f"[Read] LBA {lba_address.zfill(2)} : {read_value}")
+        return read_value
 
 
 class FullReadCommand(Command):
@@ -253,7 +256,8 @@ class ScriptCommand(Command):
     def _read_compare(self, lba_address: int, value: str) -> bool:
         read_command = ReadCommand(["read", str(lba_address)])
         result = read_command.execute()
-        return result == value
+        return result.strip() == value.strip()
+
 
 
 class HelpCommand(Command):
