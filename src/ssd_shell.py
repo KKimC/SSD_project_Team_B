@@ -2,7 +2,6 @@ import re
 
 INVALID_COMMAND = "INVALID COMMAND"
 
-
 class SsdShell:
     def __init__(self):
         pass
@@ -13,12 +12,21 @@ class SsdShell:
         if not command_list:
             print(INVALID_COMMAND)
             return
-            
+
         command_type = command_list[0]
 
         if command_type not in ["read", "write", "fullwrite", "fullread"]:
             print(INVALID_COMMAND)
             return
+          
+        if command_type == "fullwrite":
+            if self.is_invalid_fullwrite_command(command):
+                print("INVALID COMMAND")
+                return
+            else:
+                # ssd.py fullwrite 0x12345678 호출부
+                print("[Write] Done")
+                return
 
         if command_type == "read":
             if self.is_invalid_read_command(command_list):
@@ -35,13 +43,16 @@ class SsdShell:
         command = input("Shell> ")
         return command
 
-    def real_read(self):
-        pass
-
     def real_full_read(self):
         for i in range(100):
             self.real_read()
 
+    def real_full_write(self):
+        for i in range(100):
+            self.real_write()
+
+    def is_invalid_fullwrite_command(self, command: str):
+        return True
     def is_invalid_read_command(self, command: list):
         if len(command) < 2:
             return True
