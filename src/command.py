@@ -55,7 +55,9 @@ class ReadCommand(Command):
 
 class FullReadCommand(Command):
     def is_valid(self) -> bool:
-        pass
+        if len(self.args) != 1:
+            return False
+        return True
 
     def execute(self):
         list_cmds = self._make_cmds_for_fullread()
