@@ -61,3 +61,9 @@ class SsdShell:
     def make_command(self) -> str or list[str]:
         command = input("Shell> ")
         return command
+
+
+if __name__ == "__main__":
+    shell = SsdShell()
+    while shell.is_running:
+        shell.run()
