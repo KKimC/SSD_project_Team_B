@@ -1,3 +1,4 @@
+import os
 import re
 import random
 import subprocess
@@ -112,12 +113,17 @@ class ReadCommand(Command):
     def execute(self):
         lba_address = self.args[1]
 
+        env = os.environ.copy()
+        env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
+
         result = subprocess.run(
             ["python", "ssd.py", "R", lba_address],
             capture_output=True,
             text=True,
+            env=env,
         )
-        print("[Read] Done")
+        read_value = result.stdout
+        print(f"[Read] LBA {lba_address.zfill(2)} : {read_value}")
 
 
 class FullReadCommand(Command):
