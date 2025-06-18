@@ -1,18 +1,23 @@
+import io
+import sys
 import pytest
-import pytest_mock
+from pytest_mock import MockerFixture
 from src.ssd_shell import SsdShell
 
 
-def test_READ_명령어유효성검사_유효한명령어():
-    # ex) Shell> reead 3
-    # INVALID COMMAND
-    pass
+def test_READ_명령어유효성검사_유효하지않은명령어():
+    sut = SsdShell()
+    command = "reead 3"
+    ret = sut.run(command)
 
+    assert ret == "INVALID COMMAND"
 
 def test_READ_명령어유효성검사_누락():
-    # ex) Shell> 3
-    # INVALID COMMAND
-    pass
+    sut = SsdShell()
+    command = "3"
+    ret = sut.run_read(command)
+
+    assert ret == "INVALID COMMAND"
 
 
 def test_READ_LBA유효성검사_누락():
@@ -72,44 +77,91 @@ def test_WRITE명령어_정상인자_시스템콜명령어를잘만드는가():
 
 
 def test_WRITE명령어_시스템콜명령어를잘만드는가():
+    pass
+
+def test_WRITE명령어_시스템콜명령어를잘만드는가():
     # ex. ssd.py write 3 0xAAAABBBB 의 CLI 명령어를 잘 만드는지
     pass
 
+def test_WRITE명령어_누락된인자(mocker: MockerFixture):
+    # Arrange
+    wrong_input_command = ["write", "write 0xAAAABBBB", "write 3"]
+    mocker.patch("builtins.input", side_effect=wrong_input_command)
 
-def test_WRITE명령어_누락된인자1_주소_INVALIDCOMMAND():
-    # ex) Shell> write 0xAAAABBBB
-    # INVALID COMMAND
-    pass
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
 
 
-def test_WRITE명령어_누락된인자2_값_INVALIDCOMMAND():
-    # ex) Shell> write 3
-    # INVALID COMMAND
-    pass
-
-
-def test_WRITE명령어_누락된인자_ALL_INVALID_COMMAND():
-    # ex) Shell> write
-    # INVALID COMMAND
-    pass
-
-
-def test_WRITE명령어_유효하지않은인자_주소_음수_INVALID_COMMAND():
+def test_WRITE명령어_유효하지않은인자_INVALID_COMMAND(mocker: MockerFixture):
     # ex) Shell> write -1 0xAAAABBBB
     # INVALID COMMAND
-    pass
+    # Arrange
+    mocker.patch("builtins.input", return_value="write -1 0xAAAABBBB")
+
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
 
 
-def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAND():
+def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAND(
+    mocker: MockerFixture,
+):
     # ex) Shell> write 200 0xAAAABBBB
     # INVALID COMMAND
-    pass
+    # Arrange
+    mocker.patch("builtins.input", return_value="write 200 0xAAAABBBB")
+
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
 
 
-def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_COMMAND():
+def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_COMMAND(
+    mocker: MockerFixture,
+):
     # ex) Shell> write ABC 0xAAAABBBB
     # INVALID COMMAND
-    pass
+    mocker.patch("builtins.input", return_value="write 1.5 0xAAAABBBB")
+
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    expected = "INVALID COMMAND"
+    shell = SsdShell()
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+    # Assert
+    assert output.strip() == expected.strip()
+
+
+
 
 
 def test_WRITE명령어_유효하지않은인자_값_길이10초과_INVALID_COMMAND():
@@ -134,11 +186,28 @@ def test_WRITE명령어_정상동작시_실제로파일에저장되는가():
     pass
 
 
-def test_WRITE명령어_정상인자_기대되는출력물을만드는가():
+def test_WRITE명령어_정상인자_기대되는출력물을만드는가(mocker: MockerFixture):
     # ex.
     # Shell> write 3 0xAAAABBBB
     # [Write] Done
-    pass
+    # Arrange
+    original_stdout = sys.stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    mocker.patch("builtins.input", return_value="write 3 0xAAAABBBB")
+    shell = SsdShell()
+
+    expected = "[Write] Done"
+    # Act
+    shell.run()
+    sys.stdout = original_stdout
+    output = captured_output.getvalue()
+
+    # Assert
+    assert output.strip() == expected.strip()
+
+
+
 
 
 def test_HELP명령어_정상_기대되는출력(mocker):
@@ -189,7 +258,6 @@ def test_FULLWRITE명령어_정상_기대되는_출력(mocker: pytest_mock.MockF
     ret = sut.make_command(command)
     assert ret == "SUCCESS"
 
-
 def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND():
     # ex.
     # Shell> fullwrite 0xABCF
@@ -233,17 +301,23 @@ def test_FULLWRITE명령어_정상인자_실제로파일저장확인():
 
 
 def test_FULLREAD명령어_정상인자_기대되는_출력():
-    # ex.
-    # Shell> fullread
-    # 모든 값 화면 출력...
-    # 0
-    # 0xABCDABCD
-    # 1
-    # 0xABCDABCD
-    # 2
-    # 0xABCDABCD
-    # ... 100까지
-    pass
+    shell = SsdShell()
+    list_cmd = shell.make_command("fullread")
+    matched = True
+    assert len(list_cmd) == 100
+    for cmd in list_cmd:
+        if not cmd.startswith("ssd.py R "):
+            matched = False
+            break
+        params = cmd.split("ssd.py R ")
+        if len(params) != 2:
+            matched = False
+            break
+        if not params[1].isdigit():
+            matched = False
+            break
+
+    assert matched == True
 
 
 def test_FULLREAD명령어_비정상인자_불필요인자_INVALID_COMMAND():
