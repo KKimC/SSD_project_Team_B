@@ -86,7 +86,7 @@ class FullReadCommand(Command):
                 capture_output=True,
                 text=True,
             )
-            print(result)
+            print(result.stdout)
 
     def _make_cmds_for_fullread(self):
         list_cmds = []

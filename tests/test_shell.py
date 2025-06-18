@@ -1,6 +1,8 @@
 import io
 import re
 import sys
+from subprocess import CompletedProcess
+
 import pytest
 from pytest_mock import MockerFixture
 
@@ -314,7 +316,12 @@ def test_FULLREAD명령어_정상인자_기대되는_출력(mocker: MockerFixtur
     mocker.patch("builtins.input", return_value="fullread")
     expected_line_num = 100
     mock_subprocess = mocker.patch("src.command.subprocess.run")
-    mock_subprocess.return_value = "0x00000000"
+    mock_subprocess.return_value = CompletedProcess(
+        args=["python", "ssd.py", "R", "0"],
+        returncode=0,
+        stderr="",
+        stdout="0x00000000",
+    )
     arr_response = _do_run_and_get_result_from_buffer(shell).strip().splitlines()
     assert len(arr_response) == expected_line_num
 
