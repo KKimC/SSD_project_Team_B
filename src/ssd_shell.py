@@ -1,6 +1,12 @@
 import re
 
-from src.command import WriteCommand, ReadCommand, FullReadCommand, FullWriteCommand
+from src.command import (
+    WriteCommand,
+    ReadCommand,
+    FullReadCommand,
+    FullWriteCommand,
+    ExitCommand,
+)
 
 INVALID_COMMAND = "INVALID COMMAND"
 
@@ -11,6 +17,7 @@ class SsdShell:
         "write": WriteCommand,
         "fullread": FullReadCommand,
         "fullwrite": FullWriteCommand,
+        "exit": ExitCommand,
     }
 
     def __init__(self):

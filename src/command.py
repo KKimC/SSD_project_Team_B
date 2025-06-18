@@ -78,3 +78,13 @@ class FullWriteCommand(Command):
 
     def execute(self):
         print("[Write] Done")
+
+
+class ExitCommand(Command):
+    def is_valid(self) -> bool:
+        if len(self.args) != 1:
+            return False
+        return True
+
+    def execute(self):
+        pass
