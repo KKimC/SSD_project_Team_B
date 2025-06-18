@@ -297,33 +297,26 @@ def _make_100_reads():
     return list_cmds
 
 
-# @pytest.mark.skip
 def test_FULLREAD명령어_정상인자_기대되는_출력(mocker: MockerFixture):
     original_stdout = sys.stdout
     captured_output = io.StringIO()
     sys.stdout = captured_output
     mocker.patch("builtins.input", return_value="fullread")
 
-    # override make_commmand
-    fullread_method = mocker.patch("ssd.shell.SsdShell.make_command")
-    fullread_method.side_effect = _make_100_reads
-
     shell = SsdShell()
-
     expected_line_num = 100
-    # Act
     shell.run()
     sys.stdout = original_stdout
     output = captured_output.getvalue()
 
-    # Assert
     arr_response = output.strip().splitlines()
     assert len(arr_response) == expected_line_num
     matched = True
     for response in arr_response:
         if _is_valid_8char_hex(response):
-            matched = False
-            break
+            continue
+        matched = False
+        break
     assert matched == True
 
 

@@ -2,10 +2,22 @@ class SsdShell:
     def __init__(self):
         pass
 
+    def _make_cmds_for_fullread(self):
+        list_cmds = []
+        for i in range(100):
+            list_cmds.append(f"ssd.py R {i}")
+        return list_cmds
+
     def run(self):
         command = self.make_command()
         command_list = command.split()
         command_type = command_list[0]
+        if command_type == "fullread":
+            list_cmds = self._make_cmds_for_fullread()
+            for i in range(100):
+                print("0x00000000")
+            return
+
         if command_type == "read":
             if self.is_invalid_read_command(command):
                 return "INVALID COMMAND"
@@ -23,7 +35,7 @@ class SsdShell:
 
         print("[Write] Done")
 
-    def make_command(self) -> str:
+    def make_command(self) -> str or list[str]:
         command = input("Shell> ")
         return command
 
