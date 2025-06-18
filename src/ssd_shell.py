@@ -12,7 +12,7 @@ class SsdShell:
             return
 
         if command_type == "read":
-            if self.is_invalid_read_command(command):
+            if self.is_invalid_read_command(command_list):
                 print("INVALID COMMAND")
                 return
 
@@ -41,5 +41,7 @@ class SsdShell:
         for i in range(100):
             self.real_read()
 
-    def is_invalid_read_command(self, command: str):
-        return True
+    def is_invalid_read_command(self, command: list):
+        if len(command) < 2:
+            return True
+        return False
