@@ -47,15 +47,11 @@ def test_read가_제대로_된_값을_리턴하는가(ssd_file_manager_mk, ssd_s
 
 
 def test_write시_file_manager의_patch가_호출되는가(ssd_file_manager_mk, ssd_sut):
-    fake_nand = ["0x00000000" for _ in range(100)]
-    ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
     ssd_sut.write(1, "0x00000001")
     ssd_file_manager_mk.patch_ssd_nand.assert_called()
 
 
 def test_write시_정상적인경우_file_manager의_print_ssd_output함수는_한번도_호출되면_안된다(ssd_file_manager_mk, ssd_sut):
-    fake_nand = ["0x00000000" for _ in range(100)]
-    ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
     ssd_sut.write(1, "0x00000001")
     ssd_file_manager_mk.print_ssd_output.assert_not_called()
 
