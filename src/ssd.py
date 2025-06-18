@@ -1,7 +1,8 @@
 import sys
 from src.ssd_file_manager import SSDFileManager
 
-class SSD():
+
+class SSD:
     def __init__(self):
         self.nand = ["0x00000000" for _ in range(100)]
         self.ssd_file_manager = SSDFileManager()
@@ -33,10 +34,11 @@ class SSD():
         if not self._is_valid_value(value):
             self.ssd_file_manager.print_ssd_output("ERROR")
             return "ERROR"
-
+        self.nand = self.ssd_file_manager.read_ssd_nand()
         self.nand[address] = value
         self.ssd_file_manager.patch_ssd_nand(self.nand)
         return value
+
 
 def main():
     ssd = SSD()
@@ -62,5 +64,6 @@ def main():
     else:
         ssd.ssd_file_manager.print_ssd_output("ERROR")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
