@@ -13,12 +13,10 @@ class Command(ABC):
         self.args = args
 
     @abstractmethod
-    def is_valid(self) -> bool:
-        ...
+    def is_valid(self) -> bool: ...
 
     @abstractmethod
-    def execute(self):
-        ...
+    def execute(self): ...
 
     def _is_valid_8char_hex(self, write_value_str: str) -> bool:
         return bool(re.fullmatch(r"0x[0-9a-fA-F]{8}", write_value_str))
@@ -83,7 +81,12 @@ class FullReadCommand(Command):
     def execute(self):
         list_cmds = self._make_cmds_for_fullread()
         for i in range(100):
-            print("0x00000000")
+            result = subprocess.run(
+                ["python", "ssd.py", "R", f"{i}"],
+                capture_output=True,
+                text=True,
+            )
+            print(result)
 
     def _make_cmds_for_fullread(self):
         list_cmds = []
