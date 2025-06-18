@@ -7,11 +7,7 @@ class SsdShell:
         command_list = command.split()
         command_type = command_list[0]
 
-        if command_type == "3":
-            print("INVALID COMMAND")
-            return
-
-        if command_type == "reead":
+        if command_type not in ["read", "write", "fullwrite", "fullread"]:
             print("INVALID COMMAND")
             return
 
