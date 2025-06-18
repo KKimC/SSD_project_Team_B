@@ -31,18 +31,9 @@ class SSD:
             self.ssd_file_manager.print_ssd_output("ERROR")
             return "ERROR"
 
-<<<<<<< dev/ssd
         nand = self.ssd_file_manager.read_ssd_nand()
         nand[address] = value
         self.ssd_file_manager.patch_ssd_nand(nand)
-=======
-        if not self._is_valid_value(value):
-            self.ssd_file_manager.print_ssd_output("ERROR")
-            return "ERROR"
-        self.nand = self.ssd_file_manager.read_ssd_nand()
-        self.nand[address] = value
-        self.ssd_file_manager.patch_ssd_nand(self.nand)
->>>>>>> dev/merge
         return value
 
 
