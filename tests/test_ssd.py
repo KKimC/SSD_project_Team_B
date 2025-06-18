@@ -19,15 +19,15 @@ def ssd_sut(ssd_file_manager_mk):
 
 
 def test_ssd_객체_선언_후_처음_read할때_0이_반환되는가(ssd_file_manager_mk, ssd_sut):
-    ssd_file_manager_mk.read_ssd_nand.return_value = [0 for _ in range(100)]
+    ssd_file_manager_mk.read_ssd_nand.return_value = ["0x00000000" for _ in range(100)]
     assert ssd_sut.read(0) == "0x00000000"
     assert ssd_sut.read(10) == "0x00000000"
     assert ssd_sut.read(99) == "0x00000000"
 
 
 def test_read가_output에_제대로_된_값을_전달하는가(ssd_file_manager_mk, ssd_sut):
-    fake_nand = [0 for _ in range(100)]
-    fake_nand[1] = 1
+    fake_nand = ["0x00000000" for _ in range(100)]
+    fake_nand[1] = "0x00000001"
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
     ssd_sut.read(1)
     ssd_file_manager_mk.read_ssd_nand.side_effect = ["0x00000001" for _ in range(100)]
@@ -35,8 +35,8 @@ def test_read가_output에_제대로_된_값을_전달하는가(ssd_file_manager
 
 
 def test_read가_제대로_된_값을_리턴하는가(ssd_file_manager_mk, ssd_sut):
-    fake_nand = [0 for _ in range(100)]
-    fake_nand[1] = 1
+    fake_nand = ["0x00000000" for _ in range(100)]
+    fake_nand[1] = "0x00000001"
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
     assert ssd_sut.read(1) == "0x00000001"
 
@@ -67,26 +67,26 @@ def test_read명령어_잘못된_LBA범위_입력시_파일매니저의_출력�
 
 def test_read명령어_기록한적없는_LBA_읽을시_0x00000000으로_읽는가(ssd_file_manager_mk, ssd_sut):
     UNWRITTEN_LBA_ADDRESS = 4
-    fake_nand = [0 for _ in range(100)]
-    fake_nand[1] = 0x00040001
-    fake_nand[2] = 0x00040001
+    fake_nand = ["0x00000000" for _ in range(100)]
+    fake_nand[1] = "0x00040001"
+    fake_nand[2] = "0x00040001"
 
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
     result = ssd_sut.read(UNWRITTEN_LBA_ADDRESS)
 
-    assert result == 0x00000000
+    assert result == "0x00000000"
     ssd_file_manager_mk.print_ssd_output.assert_called_once_with("0x00000000")
 
 def test_write명령어_잘못된_LBA범위_입력시_파일매니저의_출력하는함수를_한번_호출하는가(ssd_file_manager_mk, ssd_sut):
     WRONG_LBA_ADDRESS = 101
-    WRITE_VAlUE = 0x00000000
+    WRITE_VAlUE = "0x00000000"
     ssd_sut.write(WRONG_LBA_ADDRESS, WRITE_VAlUE)
 
     ssd_file_manager_mk.print_ssd_output.assert_called_once()
 
 def test_write명령어_잘못된_LBA범위_입력시_파일매니저의_출력하는함수_인자에_ERROR를_전달하는가(ssd_file_manager_mk, ssd_sut):
     WRONG_LBA_ADDRESS = 101
-    WRITE_VAlUE = 0x00000000
+    WRITE_VAlUE = "0x00000000"
     ssd_sut.write(WRONG_LBA_ADDRESS, WRITE_VAlUE)
 
     ssd_file_manager_mk.print_ssd_output.assert_called_once_with("ERROR")
@@ -144,4 +144,4 @@ def test_ssd모듈의_write함수는_cmd에서_W명령어로_정상적으로_실
     ssd_write_mock = mocker.patch('src.ssd.SSD.write')
     src.ssd.main()
 
-    ssd_write_mock.assert_called_once_with(2, 0xAAAABBBB)
+    ssd_write_mock.assert_called_once_with(2, '0xAAAABBBB')
