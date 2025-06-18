@@ -1,10 +1,10 @@
 import sys
-from src.ssd_file_manager import SSDFileManager
+import re
+from ssd_file_manager import SSDFileManager
 
 class SSD():
     def __init__(self):
-        self.nand = ["0x00000000" for _ in range(100)]
-        self.ssd_file_manager = SSDFileManager()
+        self.select_file_manager(SSDFileManager())
 
     def select_file_manager(self, file_manager):
         self.ssd_file_manager = file_manager
@@ -13,7 +13,7 @@ class SSD():
         return isinstance(address, int) and 0 <= address < 100
 
     def _is_valid_value(self, value):
-        return isinstance(value, str) and value.startswith("0x") and len(value) == 10
+        return bool(re.fullmatch(r'0x[0-9a-fA-F]{8}', value))
 
     def read(self, address=-1):
         if not self._is_valid_lba(address):
@@ -26,16 +26,13 @@ class SSD():
         return value
 
     def write(self, address=-1, value="ERROR"):
-        if not self._is_valid_lba(address):
+        if not self._is_valid_lba(address) or not self._is_valid_value(value):
             self.ssd_file_manager.print_ssd_output("ERROR")
             return "ERROR"
 
-        if not self._is_valid_value(value):
-            self.ssd_file_manager.print_ssd_output("ERROR")
-            return "ERROR"
-
-        self.nand[address] = value
-        self.ssd_file_manager.patch_ssd_nand(self.nand)
+        nand = self.ssd_file_manager.read_ssd_nand()
+        nand[address] = value
+        self.ssd_file_manager.patch_ssd_nand(nand)
         return value
 
 def main():
