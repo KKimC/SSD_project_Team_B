@@ -1,5 +1,6 @@
 import sys
 import re
+import os
 from ssd_file_manager import SSDFileManager
 
 
@@ -52,7 +53,9 @@ def main():
         return "ERROR"
 
     if command == "R" and len(sys.argv) == 3:
-        ssd.read(address)
+        read_result = ssd.read(address)
+        if os.getenv("SUBPROCESS_CALL") == "1":
+            print(read_result)
 
     elif command == "W" and len(sys.argv) == 4:
         value = sys.argv[3]
