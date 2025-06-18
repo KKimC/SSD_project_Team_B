@@ -88,24 +88,6 @@ def test_READ_Console에_값을_출력하는가(mocker: MockerFixture, shell):
     pass
 
 
-def test_READ_비어있는_LBA에서_읽은값이_0x00000000인가(mocker: MockerFixture, shell):
-    # ex) Shell> read 3
-    # 0x00000000
-    pass
-
-
-def test_READ_txt파일이_없을때_읽은값이_0x00000000인가(mocker: MockerFixture, shell):
-    # ex) Shell> read 3
-    # 0x00000000
-    pass
-
-
-def test_READ_정상적인_값을_출력하는가(mocker: MockerFixture, shell):
-    # ex) Shell> read 3
-    # 0x00000000
-    pass
-
-
 def test_WRITE명령어_정상인자_시스템콜명령어를잘만드는가():
     pass
 
