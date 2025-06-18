@@ -5,6 +5,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from src.ssd_shell import SSDShell
+from src.command import FullWriteAndReadCompareCommand
 
 INVALID_COMMAND = "INVALID COMMAND"
 
@@ -325,9 +326,38 @@ def test_FULLREAD명령어_정상인자_기대되는_출력(mocker: MockerFixtur
     assert matched == True
 
 
-def test_FULLREAD명령어_비정상인자_불필요인자_INVALID_COMMAND():
+def test_FULLREAD명령어_비정상인자_불필요인자_INVALID_COMMAND(
+    mocker: MockerFixture, shell
+):
     # ex.
     # Shell> fullread 0xABCFF
     # INVALID COMMAND
     # 뒤에 뭐 있기만 해도 에러나야함
     pass
+
+
+def test_FULLWRITE_AND_READ_COMPARE_정상_PASS_100번(mocker: MockerFixture, shell):
+    # Arrange
+    mocker.patch("builtins.input", return_value="1_FullWriteAndReadCompare")
+    mock_write = mocker.patch("src.command.WriteCommand")
+    mocker.patch.object(
+        FullWriteAndReadCompareCommand, "_read_compare", return_value=True
+    )
+    result = _do_run_and_get_result_from_buffer(shell)
+    # act and assert
+    assert result.replace("\n", "") == "PASS" * 100
+    assert mock_write.call_count == 100
+
+
+def test_FULLWRITE_AND_READ_COMPARE_실패_FAIL_1번(mocker: MockerFixture, shell):
+    # Arrange
+    mocker.patch("builtins.input", return_value="1_FullWriteAndReadCompare")
+    mock_write = mocker.patch("src.command.WriteCommand")
+    mock_read = mocker.patch("src.command.ReadCommand")
+    mocker.patch.object(
+        FullWriteAndReadCompareCommand, "_read_compare", return_value=False
+    )
+    result = _do_run_and_get_result_from_buffer(shell)
+    # act and assert
+    assert result.replace("\n", "") == "FAIL"
+    assert mock_write.call_count == 1

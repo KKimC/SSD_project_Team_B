@@ -1,7 +1,15 @@
 import re
+import random
 import subprocess
 from typing import List
 from abc import abstractmethod, ABC
+
+import random
+
+
+def generate_random_hex() -> str:
+    value = random.randint(0, 0xFFFFFFFF)  # 32비트 범위 (8자리)
+    return f"0x{value:08X}"  # 대문자, 0으로 패딩
 
 
 class ExitException(Exception):
@@ -13,12 +21,10 @@ class Command(ABC):
         self.args = args
 
     @abstractmethod
-    def is_valid(self) -> bool:
-        ...
+    def is_valid(self) -> bool: ...
 
     @abstractmethod
-    def execute(self):
-        ...
+    def execute(self): ...
 
     def _is_valid_8char_hex(self, write_value_str: str) -> bool:
         return bool(re.fullmatch(r"0x[0-9a-fA-F]{8}", write_value_str))
@@ -116,3 +122,30 @@ class ExitCommand(Command):
 
     def execute(self):
         raise ExitException
+
+
+class FullWriteAndReadCompareCommand(Command):
+
+    def is_valid(self) -> bool:
+        if len(self.args) == 1 and self.args[0] in ["1_", "1_FullWriteAndReadCompare"]:
+            return True
+        return False
+
+    def execute(self):
+        lba_address = 0
+        while lba_address < 100:
+            write_value_list = [generate_random_hex() for _ in range(5)]
+            for value in write_value_list:
+                command_list = ["write", str(lba_address), value]
+                WriteCommand(command_list).execute()
+                if self._read_compare(lba_address, value):
+                    print("PASS")
+                else:
+                    print("FAIL")
+                    raise ExitException
+                lba_address += 1
+
+    def _read_compare(self, lba_address: int, value: str) -> bool:
+        read_command = ReadCommand(["read", lba_address])
+        result = read_command.execute()
+        return result == value
