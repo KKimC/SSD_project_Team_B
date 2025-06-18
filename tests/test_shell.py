@@ -186,15 +186,19 @@ def test_WRITE명령어_정상동작시_실제로파일에저장되는가():
 
 
 def test_WRITE명령어_정상인자_기대되는출력물을만드는가(mocker: MockerFixture, shell):
-    # ex.
-    # Shell> write 3 0xAAAABBBB
-    # [Write] Done
     # Arrange
     mocker.patch("builtins.input", return_value="write 3 0xAAAABBBB")
+    mock_subprocess = mocker.patch("src.command.subprocess.run")
+
     expected = "[Write] Done"
 
     # act and assert
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
+    mock_subprocess.assert_called_once_with(
+        ["python", "ssd.py", "W", "3", "0xAAAABBBB"],
+        capture_output=True,
+        text=True,
+    )
 
 
 def test_HELP명령어_정상_기대되는출력():
