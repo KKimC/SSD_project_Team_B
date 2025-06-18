@@ -5,7 +5,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from src.ssd_shell import SSDShell
-from src.command import FullWriteAndReadCompareCommand, PartialLBAWrite
+from src.command import ScriptCommand
 
 INVALID_COMMAND = "INVALID COMMAND"
 
@@ -340,9 +340,7 @@ def test_FULLWRITE_AND_READ_COMPARE_정상_PASS_100번(mocker: MockerFixture, sh
     # Arrange
     mocker.patch("builtins.input", return_value="1_FullWriteAndReadCompare")
     mock_write = mocker.patch("src.command.WriteCommand")
-    mocker.patch.object(
-        FullWriteAndReadCompareCommand, "_read_compare", return_value=True
-    )
+    mocker.patch.object(ScriptCommand, "_read_compare", return_value=True)
     result = _do_run_and_get_result_from_buffer(shell)
     # act and assert
     assert result.replace("\n", "") == "PASS" * 100
@@ -353,10 +351,7 @@ def test_FULLWRITE_AND_READ_COMPARE_실패_FAIL_1번(mocker: MockerFixture, shel
     # Arrange
     mocker.patch("builtins.input", return_value="1_FullWriteAndReadCompare")
     mock_write = mocker.patch("src.command.WriteCommand")
-    mock_read = mocker.patch("src.command.ReadCommand")
-    mocker.patch.object(
-        FullWriteAndReadCompareCommand, "_read_compare", return_value=False
-    )
+    mocker.patch.object(ScriptCommand, "_read_compare", return_value=False)
     result = _do_run_and_get_result_from_buffer(shell)
     # act and assert
     assert result.replace("\n", "") == "FAIL"
@@ -367,7 +362,7 @@ def test_PARTIAL_LBA_WRITE_정상_PASS_WRITE_150번(mocker: MockerFixture, shell
     # Arrange
     mocker.patch("builtins.input", return_value="2_PartialLBAWrite")
     mock_write = mocker.patch("src.command.WriteCommand")
-    mocker.patch.object(PartialLBAWrite, "_read_compare", return_value=True)
+    mocker.patch.object(ScriptCommand, "_read_compare", return_value=True)
     result = _do_run_and_get_result_from_buffer(shell)
     # act and assert
     assert result.replace("\n", "") == "PASS" * 150
@@ -378,7 +373,7 @@ def test_PARTIAL_LBA_WRITE_실패_FAIL_WRITE_5번(mocker: MockerFixture, shell):
     # Arrange
     mocker.patch("builtins.input", return_value="2_PartialLBAWrite")
     mock_write = mocker.patch("src.command.WriteCommand")
-    mocker.patch.object(PartialLBAWrite, "_read_compare", return_value=False)
+    mocker.patch.object(ScriptCommand, "_read_compare", return_value=False)
     result = _do_run_and_get_result_from_buffer(shell)
     # act and assert
     assert result.replace("\n", "") == "FAIL"

@@ -8,8 +8,7 @@ from src.command import (
     ExitCommand,
     ExitException,
     Command,
-    FullWriteAndReadCompareCommand,
-    PartialLBAWrite,
+    ScriptCommand,
 )
 
 INVALID_COMMAND = "INVALID COMMAND"
@@ -60,10 +59,13 @@ class SSDShell:
         command_type = command_list[0]
         command_class = self.COMMAND_MAP.get(command_type)
         if not command_class:
-            if command_type in ["1_", "1_FullWriteAndReadCompare"]:
-                return FullWriteAndReadCompareCommand(args=command_list)
-            elif command_type in ["2_", "2_PartialLBAWrite"]:
-                return PartialLBAWrite(args=command_list)
+            if command_type in [
+                "1_",
+                "1_FullWriteAndReadCompare",
+                "2_",
+                "2_PartialLBAWrite",
+            ]:
+                return ScriptCommand(args=command_list)
             return None
 
         return command_class(args=command_list)

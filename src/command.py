@@ -124,14 +124,30 @@ class ExitCommand(Command):
         raise ExitException
 
 
-class FullWriteAndReadCompareCommand(Command):
+class ScriptCommand(Command):
+    def __init__(self, args: List[str]):
+        super().__init__(args)
+        self._test_script_type = ""
 
     def is_valid(self) -> bool:
-        if len(self.args) == 1 and self.args[0] in ["1_", "1_FullWriteAndReadCompare"]:
+        if len(self.args) != 1:
+            return False
+
+        if self.args[0] in ["1_", "1_FullWriteAndReadCompare"]:
+            self._test_script_type = "1_FullWriteAndReadCompare"
+            return True
+        if len(self.args) == 1 and self.args[0] in ["2_", "2_PartialLBAWrite"]:
+            self._test_script_type = "2_PartialLBAWrite"
             return True
         return False
 
     def execute(self):
+        if self._test_script_type == "1_FullWriteAndReadCompare":
+            self._execute_script_1()
+        elif self._test_script_type == "2_PartialLBAWrite":
+            self._execute_script_2()
+
+    def _execute_script_1(self):
         lba_address = 0
         while lba_address < 100:
             write_value_list = [generate_random_hex() for _ in range(5)]
@@ -145,20 +161,7 @@ class FullWriteAndReadCompareCommand(Command):
                     raise ExitException
                 lba_address += 1
 
-    def _read_compare(self, lba_address: int, value: str) -> bool:
-        read_command = ReadCommand(["read", lba_address])
-        result = read_command.execute()
-        return result == value
-
-
-class PartialLBAWrite(Command):
-
-    def is_valid(self) -> bool:
-        if len(self.args) == 1 and self.args[0] in ["2_", "2_PartialLBAWrite"]:
-            return True
-        return False
-
-    def execute(self):
+    def _execute_script_2(self):
         for _ in range(30):
             write_value = generate_random_hex()
             lba_address_list = [4, 0, 3, 1, 2]
