@@ -12,17 +12,24 @@ class SsdShell:
         command_list = command.split()
         if not command_list:
             print(INVALID_COMMAND)
+            return
+            
+        command_type = command_list[0]
 
-        command_type = command_list[0].lower()
+        if command_type not in ["read", "write", "fullwrite", "fullread"]:
+            print(INVALID_COMMAND)
+            return
+
         if command_type == "read":
-            if self.is_invalid_read_command(command):
-                return INVALID_COMMAND
-
+            if self.is_invalid_read_command(command_list):
+                print(INVALID_COMMAND)
+                return
+              
         elif command_type == "write":
             if not self._validate_write(command_list):
                 print(INVALID_COMMAND)
                 return
-        print("[Write] Done")
+            print("[Write] Done")
 
     def make_command(self) -> str:
         command = input("Shell> ")
@@ -35,9 +42,19 @@ class SsdShell:
         for i in range(100):
             self.real_read()
 
-    def is_invalid_read_command(self, command: str):
-        return True
+    def is_invalid_read_command(self, command: list):
+        if len(command) < 2:
+            return True
 
+        LBA = command[1]
+        if not LBA.isdigit():
+            return True
+
+        LBA = int(command[1])
+        if LBA > 99 or LBA < 0:
+            return True
+
+        return False
     def _validate_write(self, args):
         if len(args) != 3:
             return False
