@@ -106,19 +106,6 @@ def test_READ_정상적인_값을_출력하는가(mocker: MockerFixture, shell):
     pass
 
 
-def test_WRITE명령어_정상인자_시스템콜명령어를잘만드는가():
-    pass
-
-
-def test_WRITE명령어_시스템콜명령어를잘만드는가():
-    pass
-
-
-def test_WRITE명령어_시스템콜명령어를잘만드는가():
-    # ex. ssd.py write 3 0xAAAABBBB 의 CLI 명령어를 잘 만드는지
-    pass
-
-
 def test_WRITE명령어_누락된인자(mocker: MockerFixture, shell):
     # Arrange
     wrong_input_command = ["write", "write 0xAAAABBBB", "write 3"]
@@ -181,20 +168,20 @@ def test_WRITE명령어_유효하지않은인자_값_INVALID_COMMAND(mocker: Moc
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_WRITE명령어_정상동작시_실제로파일에저장되는가():
-    pass
-
-
 def test_WRITE명령어_정상인자_기대되는출력물을만드는가(mocker: MockerFixture, shell):
-    # ex.
-    # Shell> write 3 0xAAAABBBB
-    # [Write] Done
     # Arrange
     mocker.patch("builtins.input", return_value="write 3 0xAAAABBBB")
+    mock_subprocess = mocker.patch("src.command.subprocess.run")
+
     expected = "[Write] Done"
 
     # act and assert
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
+    mock_subprocess.assert_called_once_with(
+        ["python", "ssd.py", "W", "3", "0xAAAABBBB"],
+        capture_output=True,
+        text=True,
+    )
 
 
 def test_HELP명령어_정상_기대되는출력():

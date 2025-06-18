@@ -1,4 +1,5 @@
 import re
+import subprocess
 from typing import List
 from abc import abstractmethod, ABC
 
@@ -36,6 +37,14 @@ class WriteCommand(Command):
         return self._is_valid_lba(lba_address) and self._is_valid_8char_hex(write_value)
 
     def execute(self):
+        lba_address = self.args[1]
+        hex_val = self.args[2]
+
+        result = subprocess.run(
+            ["python", "ssd.py", "W", lba_address, hex_val],
+            capture_output=True,
+            text=True,
+        )
         print("[Write] Done")
 
 
