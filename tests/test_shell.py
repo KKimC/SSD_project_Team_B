@@ -88,24 +88,6 @@ def test_READ_Console에_값을_출력하는가(mocker: MockerFixture, shell):
     pass
 
 
-def test_READ_비어있는_LBA에서_읽은값이_0x00000000인가(mocker: MockerFixture, shell):
-    # ex) Shell> read 3
-    # 0x00000000
-    pass
-
-
-def test_READ_txt파일이_없을때_읽은값이_0x00000000인가(mocker: MockerFixture, shell):
-    # ex) Shell> read 3
-    # 0x00000000
-    pass
-
-
-def test_READ_정상적인_값을_출력하는가(mocker: MockerFixture, shell):
-    # ex) Shell> read 3
-    # 0x00000000
-    pass
-
-
 def test_WRITE명령어_누락된인자(mocker: MockerFixture, shell):
     # Arrange
     wrong_input_command = ["write", "write 0xAAAABBBB", "write 3"]
@@ -127,7 +109,9 @@ def test_WRITE명령어_유효하지않은인자_INVALID_COMMAND(mocker: MockerF
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAND(mocker: MockerFixture, shell):
+def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAND(
+    mocker: MockerFixture, shell
+):
     # ex) Shell> write 200 0xAAAABBBB
     # INVALID COMMAND
     # Arrange
@@ -138,7 +122,9 @@ def test_WRITE명령어_유효하지않은인자_주소_100초과_INVALID_COMMAN
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_COMMAND(mocker: MockerFixture, shell):
+def test_WRITE명령어_유효하지않은인자_주소_정수가아님_INVALID_COMMAND(
+    mocker: MockerFixture, shell
+):
     # ex) Shell> write ABC 0xAAAABBBB
     # INVALID COMMAND
     mocker.patch("builtins.input", return_value="write 1.5 0xAAAABBBB")
@@ -245,7 +231,9 @@ def test_FULLWRITE명령어_정상_기대되는_출력(mocker: MockerFixture, sh
     assert mock_subprocess.call_count == 100
 
 
-def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND(mocker: MockerFixture, shell):
+def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND(
+    mocker: MockerFixture, shell
+):
     # ex.
     # Shell> fullwrite 0xABCF
     # INVALID COMMAND
@@ -256,7 +244,9 @@ def test_FULLWRITE명령어_비정상_짧은명령어_INVALID_COMMAND(mocker: Mo
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_FULLWRITE명령어_비정상인자_0x없음_INVALID_COMMAND(mocker: MockerFixture, shell):
+def test_FULLWRITE명령어_비정상인자_0x없음_INVALID_COMMAND(
+    mocker: MockerFixture, shell
+):
     # ex.
     # Shell> fullwrite ABCF33
     # INVALID COMMAND
@@ -267,7 +257,9 @@ def test_FULLWRITE명령어_비정상인자_0x없음_INVALID_COMMAND(mocker: Moc
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
 
-def test_FULLWRITE명령어_비정상인자_특수문자_INVALID_COMMAND(mocker: MockerFixture, shell):
+def test_FULLWRITE명령어_비정상인자_특수문자_INVALID_COMMAND(
+    mocker: MockerFixture, shell
+):
     # ex.
     # Shell> fullwrite 0x!@#$@@@
     # INVALID COMMAND
