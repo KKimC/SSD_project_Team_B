@@ -20,10 +20,6 @@ class SSDShell:
     def is_running(self):
         return self._is_running
 
-    def _make_command(self) -> str:
-        command = input("Shell> ")
-        return command
-
     def run(self):
         command = self._parse_command()
         if not command or not command.is_valid():
@@ -47,6 +43,10 @@ class SSDShell:
                 print(INVALID_COMMAND)
                 return
             self._execute_command(command)
+
+    def _make_command(self) -> str:
+        command = input("Shell> ")
+        return command
 
     def _parse_command(self):
         command_str = self._make_command()
