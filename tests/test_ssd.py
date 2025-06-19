@@ -187,13 +187,13 @@ def test_erase명령어_valid하지않은_size의_경우_print_ssd_output에_ERR
 
 def test_erase명령어는_write명령어에_올바른LBA와_올바른_value0x00000000을_제대로_전달하는가(mocker, ssd_file_manager_mk, ssd_sut):
     ERASE_SIZE = 3
-
     fake_nand = ["0x00000000" for _ in range(100)]
 
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
 
-    spy_write = mocker.spy(ssd_sut, "write")
+    spy_write = mocker.spy(ssd_sut, "flush_write")
     ssd_sut.erase(VALID_LBA_ADDRESS, ERASE_SIZE)
+    ssd_sut.flush()
 
     expected = [mocker.call(VALID_LBA_ADDRESS, "0x00000000"),
                 mocker.call(VALID_LBA_ADDRESS+1, "0x00000000"),
@@ -327,3 +327,16 @@ def test_flush_에_들어오는_bufferlist_안이_전부_emtpy_인경우_아무_
 
     spy_flush_write.assert_not_called()
     spy_flush_erase.assert_not_called()
+
+
+def test_buffer(mocker):
+    test_args = ['ssd.py', 'W', '2', '0xAAAABBBB']
+    mocker.patch('sys.argv', test_args)
+    ssd = SSD()
+    src.ssd.main()
+    ssd.flush()
+
+def test_optimization_ignore_1(mocker, ssd_file_manager_mk, ssd_sut):
+    test_buffer = ['1_W_1_0x12345678', '2_W_2_0x12345678', '3_W_1_0xAAAAAAAA', '4_empty', '5_empty']
+    result = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
+    assert len(result) == 2

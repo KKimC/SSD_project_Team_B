@@ -23,9 +23,15 @@ class SSD:
             self.ssd_file_manager.print_ssd_output("ERROR")
             return "ERROR"
 
-        nand = self.ssd_file_manager.read_ssd_nand()
-        value = nand[address]
-        self.ssd_file_manager.print_ssd_output(value)
+        # optimazing
+        fast_read_value = self.fast_read(address)
+        if fast_read_value != '':
+            value = fast_read_value
+        else:
+            nand = self.ssd_file_manager.read_ssd_nand()
+            value = nand[address]
+            self.ssd_file_manager.print_ssd_output(value)
+
         return value
 
     def write(self, address=-1, value="ERROR"):
@@ -33,9 +39,20 @@ class SSD:
             self.ssd_file_manager.print_ssd_output("ERROR")
             return "ERROR"
 
-        nand = self.ssd_file_manager.read_ssd_nand()
-        nand[address] = value
-        self.ssd_file_manager.patch_ssd_nand(nand)
+        # optimizing
+        buffer_list = self.get_buffer()
+        print(buffer_list)
+        if len(buffer_list) == 5:
+            self.flush()
+        else:
+            self.optimization()
+        self.insert_command(self.get_buffer(), f'W_{address}_{value}')
+
+        # 얘는 flush에 들어가야 되는 부분
+        # nand = self.ssd_file_manager.read_ssd_nand()
+        # nand[address] = value
+        # self.ssd_file_manager.patch_ssd_nand(nand)
+
         return value
 
     def get_buffer(self) -> List[str]:
@@ -74,8 +91,14 @@ class SSD:
             self.ssd_file_manager.print_ssd_output("ERROR")
             return "ERROR"
 
-        for lba in range(address, address + size):
-            self.write(lba, "0x00000000")
+        # optimizing
+        buffer_list = self.get_buffer()
+        if len(buffer_list) == 5:
+            self.flush()
+        else:
+            self.optimization()
+        self.insert_command(self.get_buffer(), f'E_{address}_{size}')
+
         return "OK"
 
     def flush_write(self, address=-1, value="ERROR"):
@@ -129,6 +152,89 @@ class SSD:
         updated_buffer_list = ["1_empty", "2_empty", "3_empty", "4_empty", "5_empty"]
         self.update_buffer(updated_buffer_list)
 
+    def fast_read(self, address):
+        buffer = self.get_buffer()
+        result = self.process_commands_in_order(buffer)
+        return result[address] # 만약에 fast_read값이 없으면 '' return
+
+    def optimization(self, buffer=None):
+        if buffer is None:
+            buffer = self.get_buffer()
+        result = self.process_commands_in_order(buffer)
+        result_cmd = self.buffer_to_commands(result)
+        self.update_buffer(result_cmd)
+        return result_cmd
+
+    def process_commands_in_order(self, commands):
+        buffer_memory = ['' for _ in range(100)]
+        def get_prefix(_cmd):
+            return int(_cmd.split('_')[0])
+        sorted_cmds = sorted(commands, key=get_prefix)
+        for cmd in sorted_cmds:
+            parts = cmd.split('_')
+            if len(parts) != 4:
+                continue
+            _, op, addr_str, val_str = parts
+            addr = int(addr_str)
+            if op == 'E':
+                count = int(val_str)
+                for i in range(addr, min(addr + count, 100)):
+                    buffer_memory[i] = '0x00000000'
+            elif op == 'W':
+                buffer_memory[addr] = val_str
+        return buffer_memory
+
+    def buffer_to_commands(self, buffer):
+        commands = []
+        i = 0
+        prefix = 1
+        size = len(buffer)
+        while i < size:
+            val = buffer[i]
+            if val == '0x00000000':
+                start = i
+                count = 0
+                while i < size and buffer[i] == '0x00000000' and count < 10:
+                    count += 1
+                    i += 1
+                commands.append(f"{prefix}_E_{start}_{count}")
+                prefix += 1
+
+            elif val != '':
+                commands.append(f"{prefix}_W_{i}_{val}")
+                prefix += 1
+                i += 1
+            else:
+                i += 1
+
+        while len(commands) < 5:
+            commands.append(f'{prefix}_empty')
+            prefix += 1
+        return commands
+
+    def insert_command(self, command_list, command_string):
+        for i, cmd in enumerate(command_list):
+            if cmd.endswith("empty"):
+                prefix = cmd.split('_')[0]
+                new_cmd = f"{prefix}_{command_string}"
+                command_list[i] = new_cmd
+                break
+        self.update_buffer(command_list)
+
+    def test_write(self, add, val):
+        a = self.write(add, val)
+        self.flush()
+        return a
+
+    def test_read(self):
+        return self.read
+
+    def test_erase(self, add, ran):
+        a = self.erase(add, ran)
+        self.flush()
+        return a
+
+
 def main():
     ssd = SSD()
 
@@ -161,7 +267,6 @@ def main():
 
     else:
         ssd.ssd_file_manager.print_ssd_output("ERROR")
-
 
 if __name__ == "__main__":
     main()
