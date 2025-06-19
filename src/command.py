@@ -1,10 +1,15 @@
-import random
 from typing import List
 from abc import abstractmethod, ABC
 from logger import Logger
 import inspect
 from src.constants import HELP_TEXT, TestScriptType, EMPTY_VALUE, MAX_ERASE_SIZE
+from src.custom_exception import ExitException
 from src.ssd_controller import SSDController
+from src.utils.helpers import (
+    generate_random_hex,
+    adjust_lba_and_count,
+    normalize_lba_range,
+)
 from src.utils.validators import (
     is_int,
     is_valid_lba_address,
@@ -13,15 +18,6 @@ from src.utils.validators import (
 )
 
 logger = Logger()
-
-
-def generate_random_hex() -> str:
-    value = random.randint(0, 0xFFFFFFFF)  # 32비트 범위 (8자리)
-    return f"0x{value:08X}"  # 대문자, 0으로 패딩
-
-
-class ExitException(Exception):
-    pass
 
 
 class Command(ABC):
@@ -116,7 +112,7 @@ class ExitCommand(Command):
         raise ExitException
 
 
-def erase_per_chunk(receiver, lba, total):
+def erase_per_chunk(receiver, lba: int, total: int):
     num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
     for i in range(num_cmds):
         if total < MAX_ERASE_SIZE:
@@ -142,33 +138,12 @@ class EraseCommand(Command):
 
     def execute(self):
         lba, size = int(self.args[1]), int(self.args[2])
-
-
-        # adjust lba, total for minus
-        lba += (int(size) + 1) if int(size) < 0 else 0
-        total = abs(int(size))
-
-        # adjust for left side
-        #            0
-        # ssd        |------- ...
-        # req     |------...
-        if lba < 0:
-            total += lba
-            lba = 0
-
-        # adjust for right side
-        #                99
-        # ssd   ....------|
-        # req     ...---------|
-        if lba + total > 99:
-            total = 99 - lba + 1
-
-        erase_per_chunk(self.receiver, lba, total)
+        adjusted_start_lba, total = adjust_lba_and_count(lba, size)
+        erase_per_chunk(self.receiver, adjusted_start_lba, total)
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"LBA: {lba}, SIZE: {size}",
         )
-
 
 
 class EraseRangeCommand(Command):
@@ -184,19 +159,14 @@ class EraseRangeCommand(Command):
         return False
 
     def execute(self):
-        lba_1, lba_2 = int(self.args[1]), int(self.args[2])
-        end_lba = lba_2 if lba_1 < lba_2 else lba_1
-        lba = lba_1 if lba_1 < lba_2 else lba_2
-        total = end_lba - lba + 1
-
-        erase_per_chunk(self.receiver, lba, total)
+        start_lba, end_lba = int(self.args[1]), int(self.args[2])
+        adjusted_start_lba, total = normalize_lba_range(start_lba, end_lba)
+        erase_per_chunk(self.receiver, adjusted_start_lba, total)
         
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
-            f"LBA: {lba_1}, SIZE: {lba_2}",
+            f"START_LBA: {start_lba}, END_LBA: {end_lba}",
         )
-
-
 
 class ScriptCommand(Command):
     def __init__(self, args: List[str], receiver: SSDController):
