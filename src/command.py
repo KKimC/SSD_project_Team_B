@@ -2,7 +2,7 @@ import random
 from typing import List
 from abc import abstractmethod, ABC
 from logger import Logger
-
+import inspect
 from src.constants import HELP_TEXT, TestScriptType, EMPTY_VALUE, MAX_ERASE_SIZE
 from src.ssd_controller import SSDController
 from src.utils.validators import (
@@ -47,6 +47,10 @@ class WriteCommand(Command):
         lba_address = self.args[1]
         hex_val = self.args[2]
         self.receiver.write(lba_address, hex_val)
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"LBA: {lba_address}, VALUE: {hex_val}",
+        )
 
 
 class ReadCommand(Command):
@@ -59,6 +63,10 @@ class ReadCommand(Command):
     def execute(self):
         lba_address = self.args[1]
         read_value = self.receiver.read(lba_address)
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"LBA: {lba_address}, VALUE: {read_value.rstrip()}",
+        )
         return read_value
 
 
@@ -71,6 +79,10 @@ class FullReadCommand(Command):
     def execute(self):
         for lba_address in range(100):
             self.receiver.read(str(lba_address))
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"FULLREAD",
+        )
 
 
 class FullWriteCommand(Command):
@@ -83,6 +95,11 @@ class FullWriteCommand(Command):
         hex_val = self.args[1]
         for lba_address in range(100):
             self.receiver.write(str(lba_address), hex_val)
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"FULLWRITE VALUE: {hex_val}",
+        )
+
 
 
 class ExitCommand(Command):
@@ -92,6 +109,10 @@ class ExitCommand(Command):
         return True
 
     def execute(self):
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"EXIT",
+        )
         raise ExitException
 
 
@@ -122,6 +143,7 @@ class EraseCommand(Command):
     def execute(self):
         lba, size = int(self.args[1]), int(self.args[2])
 
+
         # adjust lba, total for minus
         lba += (int(size) + 1) if int(size) < 0 else 0
         total = abs(int(size))
@@ -142,6 +164,11 @@ class EraseCommand(Command):
             total = 99 - lba + 1
 
         erase_per_chunk(self.receiver, lba, total)
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"LBA: {lba}, SIZE: {size}",
+        )
+
 
 
 class EraseRangeCommand(Command):
@@ -163,6 +190,12 @@ class EraseRangeCommand(Command):
         total = end_lba - lba + 1
 
         erase_per_chunk(self.receiver, lba, total)
+        
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"LBA: {lba_1}, SIZE: {lba_2}",
+        )
+
 
 
 class ScriptCommand(Command):
@@ -211,6 +244,10 @@ class ScriptCommand(Command):
             for value in write_value_list:
                 self._read_compare_and_check_pass_or_fail(lba_address, value)
                 lba_address += 1
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"SCRIPT_1",
+        )
 
     def _execute_script_2(self):
         for _ in range(30):
@@ -220,6 +257,10 @@ class ScriptCommand(Command):
                 self.receiver.write(str(write_lba_address), write_value)
             for read_lba_address in range(5):
                 self._read_compare_and_check_pass_or_fail(read_lba_address, write_value)
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"SCRIPT_2",
+        )
 
     def _execute_script_3(self):
         lba_address_list = [0, 99]
@@ -231,6 +272,10 @@ class ScriptCommand(Command):
                 self._read_compare_and_check_pass_or_fail(
                     lba_address, write_value_list[i]
                 )
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"SCRIPT_3",
+        )
 
     def _execute_script_4(self):
         for i in range(30):
@@ -242,6 +287,10 @@ class ScriptCommand(Command):
             self.receiver.erase(str(lba_address_list[0]), str(3))
             for lba_address in lba_address_list:
                 self._read_compare_and_check_pass_or_fail(lba_address, EMPTY_VALUE)
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"SCRIPT_4",
+        )
 
     def _read_compare_and_check_pass_or_fail(
         self, read_lba_address: int, write_value: str
@@ -265,4 +314,8 @@ class HelpCommand(Command):
 
     def execute(self):
         print(HELP_TEXT)
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"HELP",
+        )
         return
