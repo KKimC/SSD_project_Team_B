@@ -146,3 +146,78 @@ def test_ssd모듈의_write함수는_cmd에서_W명령어로_정상적으로_실
     src.ssd.main()
 
     ssd_write_mock.assert_called_once_with(2, '0xAAAABBBB')
+
+
+def test_erase명령어_잘못된LBA주소_입력시_print_ssd_output함수를_호출하는가(ssd_file_manager_mk, ssd_sut):
+    ssd_sut.erase(WRONG_LBA_ADDRESS)
+
+    ssd_file_manager_mk.print_ssd_output.assert_called()
+
+def test_erase명령어_잘못된LBA주소_입력시_print_ssd_output에_ERROR를_전달하는가(ssd_file_manager_mk, ssd_sut):
+    ssd_sut.erase(WRONG_LBA_ADDRESS)
+
+    ssd_file_manager_mk.print_ssd_output.assert_called_once_with("ERROR")
+
+def test_erase명령어_삭제가능한_최대size를_넘으면_print_ssd_output에_ERROR를_전달하는가(ssd_file_manager_mk, ssd_sut):
+    INVALID_ERASE_SIZE = 14
+    ssd_sut.erase(VALID_LBA_ADDRESS, INVALID_ERASE_SIZE)
+
+    ssd_file_manager_mk.print_ssd_output.assert_called_once_with("ERROR")
+
+
+def test_erase명령어_valid하지않은_size의_경우_print_ssd_output에_ERROR를_전달하는가(ssd_file_manager_mk, ssd_sut):
+    INVALID_ERASE_SIZE = -1
+    ssd_sut.erase(VALID_LBA_ADDRESS, INVALID_ERASE_SIZE)
+
+    ssd_file_manager_mk.print_ssd_output.assert_called_once_with("ERROR")
+
+def test_erase명령어는_write명령어에_올바른LBA와_올바른_value0x00000000을_제대로_전달하는가(ssd_file_manager_mk, ssd_sut):
+    START_LBA_ADDRESS = 0
+    ERASE_SIZE = 3
+    TARGET_LBA_FIRST = 0
+    TARGET_LBA_SECOND = 1
+    TARGET_LBA_THIRD = 2
+
+    ssd_sut.erase(VALID_LBA_ADDRESS, 3)
+
+    ssd_sut.write.assert_called_once_with(TARGET_LBA_FIRST, "0x00000000")
+    ssd_sut.write.assert_called_once_with(TARGET_LBA_SECOND, "0x00000000")
+    ssd_sut.write.assert_called_once_with(TARGET_LBA_THIRD, "0x00000000")
+
+def test_erase명령어는_올바르지않은_범위인경우_print_ssd_output에_ERROR를_전달하는가(ssd_file_manager_mk, ssd_sut):
+    START_LBA_ADDRESS = 98
+    ERASE_SIZE = 10
+
+    ssd_sut.erase(START_LBA_ADDRESS, ERASE_SIZE)
+
+    ssd_file_manager_mk.print_ssd_output.assert_called_once_with("ERROR")
+
+
+def test_erase명령어는_올바르지않은_범위인경우_print_ssd_output에_ERROR를_전달하는가(ssd_file_manager_mk, ssd_sut):
+    START_LBA_ADDRESS_1 = 98
+    ERASE_SIZE_1 = 10
+
+    START_LBA_ADDRESS_2 = 99
+    ERASE_SIZE_1 = 1
+
+    ssd_sut.erase(START_LBA_ADDRESS_1, ERASE_SIZE_1)
+
+    ssd_file_manager_mk.print_ssd_output.assert_called_once_with("ERROR")
+
+
+def test_erase명령어는_size가0인경우_write함수를_호출하지_않는다(ssd_file_manager_mk, ssd_sut):
+    START_LBA_ADDRESS = 1
+    ERASE_SIZE = 0
+
+    ssd_sut.erase(START_LBA_ADDRESS, ERASE_SIZE)
+
+    ssd_file_manager_mk.print_ssd_output.assert_not_called()
+
+
+def test_erase명령어는_size가0인경우_print_ssd_output_함수를_호출하지_않는다(ssd_file_manager_mk, ssd_sut):
+    START_LBA_ADDRESS = 1
+    ERASE_SIZE = 0
+
+    ssd_sut.erase(START_LBA_ADDRESS, ERASE_SIZE)
+
+    ssd_file_manager_mk.print_ssd_output.assert_not_called()

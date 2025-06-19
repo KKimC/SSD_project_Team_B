@@ -37,6 +37,8 @@ class SSD:
         self.ssd_file_manager.patch_ssd_nand(nand)
         return value
 
+    def erase(self, address, size):
+        pass
 
 def main():
     ssd = SSD()
