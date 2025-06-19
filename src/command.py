@@ -1,10 +1,11 @@
-import random
 from typing import List
 from abc import abstractmethod, ABC
 from logger import Logger
 
 from src.constants import HELP_TEXT, TestScriptType, EMPTY_VALUE, MAX_ERASE_SIZE
+from src.custom_exception import ExitException
 from src.ssd_controller import SSDController
+from src.utils.helpers import generate_random_hex
 from src.utils.validators import (
     is_int,
     is_valid_lba_address,
@@ -13,15 +14,6 @@ from src.utils.validators import (
 )
 
 logger = Logger()
-
-
-def generate_random_hex() -> str:
-    value = random.randint(0, 0xFFFFFFFF)  # 32비트 범위 (8자리)
-    return f"0x{value:08X}"  # 대문자, 0으로 패딩
-
-
-class ExitException(Exception):
-    pass
 
 
 class Command(ABC):
