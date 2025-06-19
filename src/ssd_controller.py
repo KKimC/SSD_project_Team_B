@@ -9,7 +9,6 @@ class SSDController:
             capture_output=True,
             text=True,
         )
-        print("[Write] Done")
 
     def read(self, lba_address: str):
         env = os.environ.copy()
@@ -22,7 +21,7 @@ class SSDController:
             env=env,
         )
         read_value = result.stdout
-        print(f"[Read] LBA {lba_address.zfill(2)} : {read_value}")
+
         return read_value
 
     def full_read(self):
@@ -44,4 +43,3 @@ class SSDController:
             env=env,
         )
         read_value = result.stdout
-        print(f"[Erase] LBA {lba.zfill(2)}, size:{size}")
