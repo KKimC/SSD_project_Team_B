@@ -17,6 +17,8 @@ SYNOPSIS
     flush 
     help
     exit
+    TEST 스크립트 수행
+    
 
 DESCRIPTION
 
@@ -59,4 +61,13 @@ DESCRIPTION
 
     exit
         Test Shell을 종료합니다.
-        사용법: exit"""
+        사용법: exit
+     
+    TEST 스크립트 수행
+        과제에 제시된 X(1~4)번 스크립트를 수행한다.    
+        사용법: • Test Shell 에서 “X_WriteReadAging” 라고 입력한다.
+                • Test Shell 에서 “X_” 만 입력해도 실행 가능하다.
+                
+        예시: 1_WriteReadAging
+             1_
+        """
