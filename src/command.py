@@ -153,11 +153,18 @@ class ScriptCommand(Command):
             self._execute_script_3()
 
     def _execute_script_1(self):
-        for lba_address in range(100):
+        for i in range(20):
             write_value_list = [generate_random_hex() for _ in range(5)]
+
+            lba_address = i * 5
             for value in write_value_list:
                 self.receiver.write(str(lba_address), value)
+                lba_address += 1
+
+            lba_address = i * 5
+            for value in write_value_list:
                 self._read_compare_and_check_pass_or_fail(lba_address, value)
+                lba_address += 1
 
     def _execute_script_2(self):
         for _ in range(30):
