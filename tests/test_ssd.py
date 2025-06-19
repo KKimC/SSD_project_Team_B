@@ -36,6 +36,7 @@ class SSDChecker:
         self.flush(expected_buffer, self.expected_nand)
         for i in range(100):
             if self.test_nand[i] != self.expected_nand[i]:
+                print(i, "self.test_nand[i]", self.test_nand[i], "self.expected_nand[i]", self.expected_nand[i])
                 return False
         else:
             return True
@@ -371,8 +372,8 @@ def test_buffer(mocker):
     ssd.flush()
 
 def test_optimization_ignore_1(mocker, ssd_file_manager_mk, ssd_sut):
-    test_buffer = ['1_W_1_0x12345678', '2_W_2_0x12345678', '3_W_1_0xAAAAAAAA', '4_empty', '5_empty']
-    result_buffer = ['1_W_1_0x12345678', '2_W_2_0x12345678', '3_W_1_0xAAAAAAAA', '4_empty', '5_empty']
+    test_buffer = ['1_E_1_2', '2_E_4_1', '3_W_3_0xAAAAAAAA', '4_empty', '5_empty']
+    result_buffer = ['1_E_1_4', '2_W_3_0xAAAAAAAA', '3_empty', '4_empty', '5_empty']
     optimized_buffer = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
 
     ssd_checker = SSDChecker()
