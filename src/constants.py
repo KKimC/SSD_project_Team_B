@@ -1,7 +1,8 @@
 INVALID_COMMAND = "INVALID COMMAND"
 HELP_TEXT = """
 AUTHOR
-    비긴어게인 팀 제작자: 김성현, 강태윤, 임동혁, 김남민, 김기웅, 정보람, 김민규
+    팀명: 25년 CRA B긴어게인
+    제작자(팀원): 김성현, 강태윤, 임동혁, 김남민, 김기웅, 정보람, 김민규
 
 NAME
     Test Shell - SSD 가상 장치 테스트용 커맨드 라인 셸
@@ -11,6 +12,9 @@ SYNOPSIS
     read [LBA]
     fullwrite [VALUE]
     fullread
+    erase [LBA] [SIZE]
+    erase_range [START_LBA] [END_LBA]
+    flush 
     help
     exit
 
@@ -35,6 +39,20 @@ DESCRIPTION
         전체 LBA(0~99)에서 값을 읽어 순차적으로 출력합니다.
         사용법: fullread
 
+    erase
+        지정한 LBA 주소에서 해당하는 SIZE를 삭제합니다.
+        사용법: erase [LBA] [SIZE]
+        예시: erase 1 5
+        
+    erase_range
+        START_LBA 부터 END_LBA 까지 내용을 삭제한다.
+        사용법: erase_range [START_LBA] [END_LBA]
+        예시: erase_range 1 23
+        
+    flush
+        Command Buffer 를 Flush 한다
+        사용법: flush
+        
     help
         명령어 목록 및 설명과 제작자 정보를 출력합니다.
         사용법: help
