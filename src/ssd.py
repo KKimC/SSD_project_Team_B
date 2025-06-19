@@ -176,11 +176,11 @@ class SSD:
                 continue
             _, op, addr_str, val_str = parts
             addr = int(addr_str)
-            if op == 'e':
+            if op == 'E':
                 count = int(val_str)
                 for i in range(addr, min(addr + count, 100)):
                     buffer_memory[i] = '0x00000000'
-            elif op == 'w':
+            elif op == 'W':
                 buffer_memory[addr] = val_str
         return buffer_memory
 
@@ -197,11 +197,11 @@ class SSD:
                 while i < size and buffer[i] == '0x00000000' and count < 10:
                     count += 1
                     i += 1
-                commands.append(f"{prefix}_e_{start}_{count}")
+                commands.append(f"{prefix}_E_{start}_{count}")
                 prefix += 1
 
             elif val != '':
-                commands.append(f"{prefix}_w_{i}_{val}")
+                commands.append(f"{prefix}_W_{i}_{val}")
                 prefix += 1
                 i += 1
             else:
