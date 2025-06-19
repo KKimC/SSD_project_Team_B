@@ -22,6 +22,11 @@ class SSD:
             self.ssd_file_manager.print_ssd_output("ERROR")
             return "ERROR"
 
+        #optimazing
+        fast_read_value = self.fast_read(address)
+        if fast_read_value != '':
+            return fast_read_value
+
         nand = self.ssd_file_manager.read_ssd_nand()
         value = nand[address]
         self.ssd_file_manager.print_ssd_output(value)
@@ -37,17 +42,21 @@ class SSD:
         self.ssd_file_manager.patch_ssd_nand(nand)
         return value
 
-    def update_buffer(self):
+    def get_buffer(self):
         # return ['1_e_1_3', '2_e_2_5', '3_w_3_0x00000001', '4_e_4_8', '5_e_6_10']
-        return ['1_e_18_3', '2_w_21_0x12341234', '3_e_18_5', '4_empty', '5_empty']
+        # return ['1_e_18_3', '2_w_21_0x12341234', '3_e_18_5', '4_empty', '5_empty']
+        return ['1_w_20_0xABCDABCD', '2_w_21_0x12341234', '3_w_20_0xEEEEFFFF', '4_empty', '5_empty']
+
+    def update_buffer(self, command_list):
+        print('update done')
 
     def fast_read(self, address):
-        buffer = self.update_buffer()
+        buffer = self.get_buffer()
         result = self.process_commands_in_order(buffer)
         return result[address] # 만약에 fast_read값이 없으면 '' return
 
     def optimization(self):
-        buffer = self.update_buffer()
+        buffer = self.get_buffer()
         result = self.process_commands_in_order(buffer)
         result_cmd = self.buffer_to_commands(result)
         print(result_cmd)
@@ -94,6 +103,16 @@ class SSD:
             else:
                 i += 1
         return commands
+
+    def insert_command(self, command_list, command_string):
+        for i, cmd in enumerate(command_list):
+            if cmd.endswith("empty"):
+                # prefix는 원래 있던 걸 유지하되, command_string에서 'w_...' 부분만 붙임
+                prefix = cmd.split('_')[0]
+                new_cmd = f"{prefix}_{command_string}"
+                command_list[i] = new_cmd
+                break
+        return command_list
 
 
 ssd = SSD()
