@@ -37,8 +37,25 @@ class SSD:
         self.ssd_file_manager.patch_ssd_nand(nand)
         return value
 
-    def erase(self, address, size):
-        pass
+    def erase(self, address=-1, size=0):
+        MAX_ERASE_SIZE = 10
+        if not self._is_valid_lba(address):
+            self.ssd_file_manager.print_ssd_output("ERROR")
+            return "ERROR"
+
+        if not isinstance(size, int) or not (0 <= size <= MAX_ERASE_SIZE):
+            self.ssd_file_manager.print_ssd_output("ERROR")
+            return "ERROR"
+
+        LAST_LBA = address + size - 1
+        if LAST_LBA > 99:
+            self.ssd_file_manager.print_ssd_output("ERROR")
+            return "ERROR"
+
+        for lba in range(address, address + size):
+            self.write(lba, "0x00000000")
+        return "OK"
+
 
 def main():
     ssd = SSD()
