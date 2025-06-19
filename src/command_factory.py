@@ -6,6 +6,8 @@ from src.command import (
     ExitCommand,
     HelpCommand,
     ScriptCommand,
+    EraseCommand,
+    EraseRangeCommand,
 )
 
 
@@ -24,6 +26,10 @@ class CommandFactory:
             return ExitCommand
         if command_str == "help":
             return HelpCommand
+        if command_str == "erase":
+            return EraseCommand
+        if command_str == "erase_range":
+            return EraseRangeCommand
         if (
             (
                 command_str.startswith("1_")

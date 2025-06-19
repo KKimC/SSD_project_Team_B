@@ -1,5 +1,3 @@
-import re
-
 from src.command import (
     ExitException,
     Command,
