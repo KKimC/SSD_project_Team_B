@@ -32,14 +32,27 @@ class SSD:
         self.ssd_file_manager.print_ssd_output(value)
         return value
 
+    def flush(self):
+        print('flush done')
+
     def write(self, address=-1, value="ERROR"):
         if not self._is_valid_lba(address) or not self._is_valid_value(value):
             self.ssd_file_manager.print_ssd_output("ERROR")
             return "ERROR"
 
-        nand = self.ssd_file_manager.read_ssd_nand()
-        nand[address] = value
-        self.ssd_file_manager.patch_ssd_nand(nand)
+        # optimizing
+        buffer_list = self.get_buffer()
+        if len(buffer_list) == 5:
+            self.flush()
+        else:
+            self.optimization()
+        self.insert_command(self.get_buffer(), f'w_{address}_{value}')
+
+        # 얘는 flush에 들어가야 되는 부분
+        # nand = self.ssd_file_manager.read_ssd_nand()
+        # nand[address] = value
+        # self.ssd_file_manager.patch_ssd_nand(nand)
+
         return value
 
     def get_buffer(self):
@@ -48,7 +61,7 @@ class SSD:
         return ['1_w_20_0xABCDABCD', '2_w_21_0x12341234', '3_w_20_0xEEEEFFFF', '4_empty', '5_empty']
 
     def update_buffer(self, command_list):
-        print('update done')
+        print('update done, list : ', command_list)
 
     def fast_read(self, address):
         buffer = self.get_buffer()
@@ -60,6 +73,7 @@ class SSD:
         result = self.process_commands_in_order(buffer)
         result_cmd = self.buffer_to_commands(result)
         print(result_cmd)
+        self.update_buffer(result)
 
     def process_commands_in_order(self, commands):
         buffer_memory = ['' for _ in range(100)]
@@ -107,12 +121,11 @@ class SSD:
     def insert_command(self, command_list, command_string):
         for i, cmd in enumerate(command_list):
             if cmd.endswith("empty"):
-                # prefix는 원래 있던 걸 유지하되, command_string에서 'w_...' 부분만 붙임
                 prefix = cmd.split('_')[0]
                 new_cmd = f"{prefix}_{command_string}"
                 command_list[i] = new_cmd
                 break
-        return command_list
+        self.update_buffer(command_list)
 
 
 ssd = SSD()
