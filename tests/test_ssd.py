@@ -333,5 +333,10 @@ def test_buffer(mocker):
     test_args = ['ssd.py', 'W', '2', '0xAAAABBBB']
     mocker.patch('sys.argv', test_args)
     ssd = SSD()
-    ssd.flush()
     src.ssd.main()
+    ssd.flush()
+
+def test_optimization_ignore_1(mocker, ssd_file_manager_mk, ssd_sut):
+    test_buffer = ['1_W_1_0x12345678', '2_W_2_0x12345678', '3_W_1_0xAAAAAAAA', '4_empty', '5_empty']
+    result = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
+    assert len(result) == 2

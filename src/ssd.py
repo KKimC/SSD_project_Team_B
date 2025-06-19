@@ -157,11 +157,13 @@ class SSD:
         result = self.process_commands_in_order(buffer)
         return result[address] # 만약에 fast_read값이 없으면 '' return
 
-    def optimization(self):
-        buffer = self.get_buffer()
+    def optimization(self, buffer=None):
+        if buffer is None:
+            buffer = self.get_buffer()
         result = self.process_commands_in_order(buffer)
         result_cmd = self.buffer_to_commands(result)
         self.update_buffer(result_cmd)
+        return result_cmd
 
     def process_commands_in_order(self, commands):
         buffer_memory = ['' for _ in range(100)]
