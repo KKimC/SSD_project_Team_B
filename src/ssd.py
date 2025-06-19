@@ -66,7 +66,7 @@ class SSD:
         self.ssd_file_manager.patch_ssd_nand(nand)
         return value
 
-    def flush_erase(self, address=-1, size=0):
+    def flush_erase(self, address=-1, size=-1):
         MAX_ERASE_SIZE = 10
         if not self._is_valid_lba(address):
             self.ssd_file_manager.print_ssd_output("ERROR")
