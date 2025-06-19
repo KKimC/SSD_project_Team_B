@@ -8,6 +8,7 @@ class TestScriptType(Enum):
     ERASE_AND_AGING = "4_EraseAndWriteAging"
 
 
+EMPTY_VALUE = "0x00000000"
 INVALID_COMMAND = "INVALID COMMAND"
 HELP_TEXT = """
 AUTHOR
