@@ -9,6 +9,8 @@ from src.command import (
     EraseCommand,
     EraseRangeCommand,
 )
+from src.constants import TestScriptType
+from src.utils.validators import is_right_script_name
 
 
 class CommandFactory:
@@ -31,12 +33,10 @@ class CommandFactory:
         if command_str == "erase_range":
             return EraseRangeCommand
         if (
-            (
-                command_str.startswith("1_")
-                and command_str in "1_FullWriteAndReadCompare"
-            )
-            or (command_str.startswith("2_") and command_str in "2_PartialLBAWrite")
-            or (command_str.startswith("3_") and command_str in "3_WriteReadAging")
+            is_right_script_name(command_str, TestScriptType.FULL_WRITE_AND_READ.value)
+            or is_right_script_name(command_str, TestScriptType.PARTIAL_LBA_WRITE.value)
+            or is_right_script_name(command_str, TestScriptType.WRITE_READ_AGING.value)
+            or is_right_script_name(command_str, TestScriptType.ERASE_AND_AGING.value)
         ):
 
             return ScriptCommand

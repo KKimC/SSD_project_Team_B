@@ -1,4 +1,16 @@
+from enum import Enum
+
+
+class TestScriptType(Enum):
+    FULL_WRITE_AND_READ = "1_FullWriteAndReadCompare"
+    PARTIAL_LBA_WRITE = "2_PartialLBAWrite"
+    WRITE_READ_AGING = "3_WriteReadAging"
+    ERASE_AND_AGING = "4_EraseAndWriteAging"
+
+
+EMPTY_VALUE = "0x00000000"
 INVALID_COMMAND = "INVALID COMMAND"
+MAX_ERASE_SIZE = 10
 HELP_TEXT = """
 AUTHOR
     팀명: 25년 CRA B긴어게인
@@ -61,6 +73,7 @@ DESCRIPTION
 
     exit
         Test Shell을 종료합니다.
+
         사용법: exit
      
     TEST 스크립트 수행
@@ -71,3 +84,6 @@ DESCRIPTION
         예시: 1_WriteReadAging
              1_
         """
+
+
+

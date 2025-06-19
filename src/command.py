@@ -3,11 +3,16 @@ from typing import List
 from abc import abstractmethod, ABC
 from logger import Logger
 
-logger = Logger()
-
-from src.constants import HELP_TEXT
+from src.constants import HELP_TEXT, TestScriptType, EMPTY_VALUE, MAX_ERASE_SIZE
 from src.ssd_controller import SSDController
-from src.utils.validators import is_int, is_valid_lba_address, is_valid_8char_hex
+from src.utils.validators import (
+    is_int,
+    is_valid_lba_address,
+    is_valid_8char_hex,
+    is_right_script_name,
+)
+
+logger = Logger()
 
 
 def generate_random_hex() -> str:
@@ -102,7 +107,21 @@ class EraseCommand(Command):
         return is_int(size)
 
     def execute(self):
-        pass
+        lba, size = int(self.args[1]), int(self.args[2])
+        lba_1, lba_2 = int(self.args[1]), int(self.args[2])
+        end_lba = lba + size - 1
+        total = size
+
+        num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
+        for i in range(num_cmds):
+            if total < MAX_ERASE_SIZE:
+                size = total
+                total = 0
+            else:
+                size = MAX_ERASE_SIZE
+                total -= MAX_ERASE_SIZE
+            self.receiver.erase(str(lba), str(size))
+            lba += MAX_ERASE_SIZE
 
 
 class EraseRangeCommand(Command):
@@ -118,7 +137,21 @@ class EraseRangeCommand(Command):
         return False
 
     def execute(self):
-        pass
+        lba_1, lba_2 = int(self.args[1]), int(self.args[2])
+        end_lba = lba_2 if lba_1 < lba_2 else lba_1
+        lba = lba_1 if lba_1 < lba_2 else lba_2
+        total = end_lba - lba + 1
+
+        num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
+        for i in range(num_cmds):
+            if total < MAX_ERASE_SIZE:
+                size = total
+                total = 0
+            else:
+                size = MAX_ERASE_SIZE
+                total -= MAX_ERASE_SIZE
+            self.receiver.erase(str(lba), str(size))
+            lba += MAX_ERASE_SIZE
 
 
 class ScriptCommand(Command):
@@ -129,25 +162,30 @@ class ScriptCommand(Command):
     def is_valid(self) -> bool:
         if len(self.args) != 1:
             return False
-
-        if self.args[0] in ["1_", "1_FullWriteAndReadCompare"]:
-            self._test_script_type = "1_FullWriteAndReadCompare"
+        script_name = self.args[0]
+        if is_right_script_name(script_name, TestScriptType.FULL_WRITE_AND_READ.value):
+            self._test_script_type = TestScriptType.FULL_WRITE_AND_READ.value
             return True
-        if self.args[0] in ["2_", "2_PartialLBAWrite"]:
-            self._test_script_type = "2_PartialLBAWrite"
+        if is_right_script_name(script_name, TestScriptType.PARTIAL_LBA_WRITE.value):
+            self._test_script_type = TestScriptType.PARTIAL_LBA_WRITE.value
             return True
-        if self.args[0] in ["3_", "3_WriteReadAging"]:
-            self._test_script_type = "3_WriteReadAging"
+        if is_right_script_name(script_name, TestScriptType.WRITE_READ_AGING.value):
+            self._test_script_type = TestScriptType.WRITE_READ_AGING.value
+            return True
+        if is_right_script_name(script_name, TestScriptType.ERASE_AND_AGING.value):
+            self._test_script_type = TestScriptType.ERASE_AND_AGING.value
             return True
         return False
 
     def execute(self):
-        if self._test_script_type == "1_FullWriteAndReadCompare":
+        if self._test_script_type == TestScriptType.FULL_WRITE_AND_READ.value:
             self._execute_script_1()
-        elif self._test_script_type == "2_PartialLBAWrite":
+        elif self._test_script_type == TestScriptType.PARTIAL_LBA_WRITE.value:
             self._execute_script_2()
-        elif self._test_script_type == "3_WriteReadAging":
+        elif self._test_script_type == TestScriptType.WRITE_READ_AGING.value:
             self._execute_script_3()
+        elif self._test_script_type == TestScriptType.ERASE_AND_AGING.value:
+            self._execute_script_4()
 
     def _execute_script_1(self):
         for i in range(20):
@@ -183,7 +221,20 @@ class ScriptCommand(Command):
                     lba_address, write_value_list[i]
                 )
 
-    def _read_compare_and_check_pass_or_fail(self, read_lba_address, write_value):
+    def _execute_script_4(self):
+        for i in range(30):
+            lba_address_list = [2 * (i + 1), 2 * (i + 1) + 1, 2 * (i + 1) + 2]
+            write_value = generate_random_hex()
+            self.receiver.write(str(lba_address_list[0]), write_value)
+            # Overwrite
+            self.receiver.write(str(lba_address_list[0]), write_value)
+            self.receiver.erase(str(lba_address_list[0]), str(3))
+            for lba_address in lba_address_list:
+                self._read_compare_and_check_pass_or_fail(lba_address, EMPTY_VALUE)
+
+    def _read_compare_and_check_pass_or_fail(
+        self, read_lba_address: int, write_value: str
+    ):
         if self._read_compare(read_lba_address, write_value):
             print("PASS")
         else:
