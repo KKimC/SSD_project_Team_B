@@ -60,6 +60,26 @@ class SSD:
         # return ['1_e_18_3', '2_w_21_0x12341234', '3_e_18_5', '4_empty', '5_empty']
         return ['1_w_20_0xABCDABCD', '2_w_21_0x12341234', '3_w_20_0xEEEEFFFF', '4_empty', '5_empty']
 
+    def erase(self, address=-1, size=0):
+        MAX_ERASE_SIZE = 10
+        if not self._is_valid_lba(address):
+            self.ssd_file_manager.print_ssd_output("ERROR")
+            return "ERROR"
+
+        if not isinstance(size, int) or not (0 <= size <= MAX_ERASE_SIZE):
+            self.ssd_file_manager.print_ssd_output("ERROR")
+            return "ERROR"
+
+        LAST_LBA = address + size - 1
+        if LAST_LBA > 99:
+            self.ssd_file_manager.print_ssd_output("ERROR")
+            return "ERROR"
+
+        for lba in range(address, address + size):
+            self.write(lba, "0x00000000")
+        return "OK"
+
+
     def update_buffer(self, command_list):
         print('update done, list : ', command_list)
 
@@ -127,36 +147,39 @@ class SSD:
                 break
         self.update_buffer(command_list)
 
+def main():
+    ssd = SSD()
 
-ssd = SSD()
-ssd.optimization()
+    if len(sys.argv) < 3:
+        print("Usage: python ssd.py R [LBA] or python ssd.py W [LBA] [VALUE]")
+        return "ERROR"
 
-# def main():
-#     ssd = SSD()
-#
-#     if len(sys.argv) < 3:
-#         print("Usage: python ssd.py R [LBA] or python ssd.py W [LBA] [VALUE]")
-#         return "ERROR"
-#
-#     command = sys.argv[1]
-#     try:
-#         address = int(sys.argv[2])
-#     except ValueError:
-#         ssd.ssd_file_manager.print_ssd_output("ERROR")
-#         return "ERROR"
-#
-#     if command == "R" and len(sys.argv) == 3:
-#         read_result = ssd.read(address)
-#         if os.getenv("SUBPROCESS_CALL") == "1":
-#             print(read_result)
-#
-#     elif command == "W" and len(sys.argv) == 4:
-#         value = sys.argv[3]
-#         ssd.write(address, value)
-#
-#     else:
-#         ssd.ssd_file_manager.print_ssd_output("ERROR")
-#
-#
-# if __name__ == "__main__":
-#     main()
+    command = sys.argv[1]
+    try:
+        address = int(sys.argv[2])
+    except ValueError:
+        ssd.ssd_file_manager.print_ssd_output("ERROR")
+        return "ERROR"
+
+    if command == "R" and len(sys.argv) == 3:
+        read_result = ssd.read(address)
+        if os.getenv("SUBPROCESS_CALL") == "1":
+            print(read_result)
+
+    elif command == "W" and len(sys.argv) == 4:
+        value = sys.argv[3]
+        ssd.write(address, value)
+
+    elif command == "E" and len(sys.argv) == 4:
+        size = int(sys.argv[3])
+        ssd.erase(address, size)
+
+    elif command == "F":
+        pass
+        ## Flush
+
+    else:
+        ssd.ssd_file_manager.print_ssd_output("ERROR")
+
+if __name__ == "__main__":
+    main()
