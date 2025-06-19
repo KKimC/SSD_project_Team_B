@@ -80,6 +80,14 @@ def main():
         value = sys.argv[3]
         ssd.write(address, value)
 
+    elif command == "E" and len(sys.argv) == 4:
+        size = int(sys.argv[4])
+        ssd.erase(address, size)
+
+    elif command == "F":
+        pass
+        ## Flush
+
     else:
         ssd.ssd_file_manager.print_ssd_output("ERROR")
 
