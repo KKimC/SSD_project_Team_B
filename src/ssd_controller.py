@@ -35,6 +35,3 @@ class SSDController:
 
     def erase(self, lba: str, size: str):
         pass
-
-    def eraserange(self, _lba_1: str, _lba_2: str):
-        pass
