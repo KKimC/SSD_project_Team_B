@@ -2,7 +2,7 @@ import random
 from typing import List
 from abc import abstractmethod, ABC
 
-from src.constants import HELP_TEXT, TestScriptType
+from src.constants import HELP_TEXT, TestScriptType, EMPTY_VALUE
 from src.ssd_controller import SSDController
 from src.utils.validators import (
     is_int,
@@ -184,9 +184,21 @@ class ScriptCommand(Command):
                 )
 
     def _execute_script_4(self):
-        pass
+        for i in range(30):
+            lba_address_list = [2 * (i + 1), 2 * (i + 1) + 1, 2 * (i + 1) + 2]
+            write_value = generate_random_hex()
+            self.receiver.write(str(lba_address_list[0]), write_value)
+            # Overwrite
+            self.receiver.write(str(lba_address_list[0]), write_value)
+            self.receiver.eraserange(
+                str(lba_address_list[0]), str(lba_address_list[-1])
+            )
+            for lba_address in lba_address_list:
+                self._read_compare_and_check_pass_or_fail(lba_address, EMPTY_VALUE)
 
-    def _read_compare_and_check_pass_or_fail(self, read_lba_address, write_value):
+    def _read_compare_and_check_pass_or_fail(
+        self, read_lba_address: int, write_value: str
+    ):
         if self._read_compare(read_lba_address, write_value):
             print("PASS")
         else:
