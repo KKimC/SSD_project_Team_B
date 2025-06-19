@@ -80,6 +80,10 @@ class FullReadCommand(Command):
 
     def execute(self):
         self.receiver.full_read()
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"FULLREAD",
+        )
 
 
 class FullWriteCommand(Command):
@@ -91,6 +95,10 @@ class FullWriteCommand(Command):
     def execute(self):
         hex_val = self.args[1]
         self.receiver.full_write(hex_val)
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"FULLWRITE VALUE: {hex_val}",
+        )
 
 
 class ExitCommand(Command):
