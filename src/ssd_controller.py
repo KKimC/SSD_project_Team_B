@@ -32,3 +32,9 @@ class SSDController:
     def full_write(self, hex_val: str):
         for lba_address in range(100):
             self.write(str(lba_address), hex_val)
+
+    def erase(self, lba: str, size: str):
+        pass
+
+    def eraserange(self, _lba_1: str, _lba_2: str):
+        pass
