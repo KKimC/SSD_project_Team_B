@@ -5,9 +5,15 @@ from datetime import datetime
 
 
 class Logger:
+    _instance = None
     LOG_DIR = "../logs"
     LATEST_LOG = "latest.log"
     MAX_SIZE = 10 * 1024  # 10KB
+
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     def __init__(self):
         os.makedirs(self.LOG_DIR, exist_ok=True)
@@ -49,22 +55,3 @@ class Logger:
         aligned = f"{left:<45}: {message}"  # 좌측 정렬, 총 45칸 맞춤
         print(aligned)
         self._write_to_file(aligned)
-
-    def log_decorator(self, message):  # message 받으려면 두번감싸야함
-        def decorator(func):
-            @functools.wraps(func)
-            def wrapper(*args, **kwargs):
-                func_name = f"{func.__qualname__}()"
-                self.print(func_name, message)
-                # 예외 처리 원할 경우 아래 주석 해제
-                # try:
-                #     result = func(*args, **kwargs)
-                #     self.print(func_name, "성공적으로 종료됨")
-                #     return result
-                # except Exception as e:
-                #     self.print(func_name, f" 예외 발생 - {e}")
-                #     raise
-
-            return wrapper
-
-        return decorator
