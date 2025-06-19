@@ -86,7 +86,6 @@ class ExitCommand(Command):
 
 
 class EraseCommand(Command):
-
     def is_valid(self) -> bool:
         if len(self.args) != 3:
             return False
@@ -98,11 +97,11 @@ class EraseCommand(Command):
         return is_int(size)
 
     def execute(self):
-        pass
+        lba, size = self.args[1:]
+        self.receiver.erase(lba, size)
 
 
 class EraseRangeCommand(Command):
-
     def is_valid(self) -> bool:
         if len(self.args) != 3:
             return False
@@ -115,7 +114,8 @@ class EraseRangeCommand(Command):
         return False
 
     def execute(self):
-        pass
+        lba_1, lba_2 = self.args[1:]
+        self.receiver.eraserange(lba_1, lba_2)
 
 
 class ScriptCommand(Command):

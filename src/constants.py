@@ -42,3 +42,4 @@ DESCRIPTION
     exit
         Test Shell을 종료합니다.
         사용법: exit"""
+MAX_ERASE_SIZE = 10
