@@ -6,6 +6,7 @@ import sys
 import src.ssd
 from src.ssd import SSD
 from src.ssd_file_manager import SSDFileManager
+import re
 
 WRONG_LBA_ADDRESS = 101
 VALID_LBA_ADDRESS = 10
@@ -24,6 +25,39 @@ def ssd_sut(ssd_file_manager_mk):
     ssd_sut = SSD()
     ssd_sut.select_file_manager(ssd_file_manager_mk)
     return ssd_sut
+
+class SSDChecker:
+    def __init__(self):
+        self.test_nand = [0 for _ in range(100)]
+        self.expected_nand = [0 for _ in range(100)]
+
+    def check_optimization(self, test_buffer, expected_buffer):
+        self.flush(test_buffer, self.test_nand)
+        self.flush(expected_buffer, self.expected_nand)
+        for i in range(100):
+            if self.test_nand[i] != self.expected_nand[i]:
+                return False
+        else:
+            return True
+
+
+    def flush(self, buffer_list, nand):
+        for entry in buffer_list:
+            parts = entry.split('_')
+            if len(parts) < 2: # empty case
+                continue
+
+            cmd = parts[1]
+            if cmd == "W" and len(parts) == 4:
+                address = int(parts[2])
+                value = parts[3]
+                nand[address] = value
+
+            elif cmd == "E" and len(parts) == 4:
+                address = int(parts[2])
+                size = int(parts[3])
+                for lba in range(address, address + size):
+                    nand[lba] = "0x00000000"
 
 
 def test_ssd_객체_선언_후_처음_read할때_0이_반환되는가(ssd_file_manager_mk, ssd_sut):
@@ -338,5 +372,8 @@ def test_buffer(mocker):
 
 def test_optimization_ignore_1(mocker, ssd_file_manager_mk, ssd_sut):
     test_buffer = ['1_W_1_0x12345678', '2_W_2_0x12345678', '3_W_1_0xAAAAAAAA', '4_empty', '5_empty']
-    result = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
-    assert len(result) == 2
+    result_buffer = ['1_W_1_0x12345678', '2_W_2_0x12345678', '3_W_1_0xAAAAAAAA', '4_empty', '5_empty']
+    optimized_buffer = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
+
+    ssd_checker = SSDChecker()
+    assert ssd_checker.check_optimization(optimized_buffer, result_buffer) == True
