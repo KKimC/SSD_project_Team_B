@@ -1,3 +1,13 @@
+from enum import Enum
+
+
+class TestScriptType(Enum):
+    FULL_WRITE_AND_READ = "1_FullWriteAndReadCompare"
+    PARTIAL_LBA_WRITE = "2_PartialLBAWrite"
+    WRITE_READ_AGING = "3_WriteReadAging"
+    ERASE_AND_AGING = "4_EraseAndWriteAging"
+
+
 INVALID_COMMAND = "INVALID COMMAND"
 HELP_TEXT = """
 AUTHOR

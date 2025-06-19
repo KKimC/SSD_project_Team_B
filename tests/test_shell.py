@@ -145,7 +145,7 @@ def test_WRITE명령어_유효하지않은인자_값_INVALID_COMMAND(mocker: Moc
 def test_WRITE명령어_정상인자_기대되는출력물을만드는가(mocker: MockerFixture, shell):
     # Arrange
     mocker.patch("builtins.input", return_value="write 3 0xAAAABBBB")
-    mock_subprocess = mocker.patch("src.command.subprocess.run")
+    mock_subprocess = mocker.patch("src.ssd_controller.subprocess.run")
 
     expected = "[Write] Done"
 
@@ -224,7 +224,7 @@ def test_FULLWRITE명령어_정상_기대되는_출력(mocker: MockerFixture, sh
     # LBA 0~99까지 반복되며 run_ssd_command가 호출되는지 확인
     mocker.patch("builtins.input", return_value="fullwrite 0xAAAABBBB")
     expected = "[Write] Done"
-    mock_subprocess = mocker.patch("src.command.subprocess.run")
+    mock_subprocess = mocker.patch("src.ssd_controller.subprocess.run")
     # act and assert
     shell.run()
     assert mock_subprocess.call_count == 100
@@ -294,7 +294,7 @@ def _make_100_reads():
 def test_FULLREAD명령어_정상인자_기대되는_출력(mocker: MockerFixture, shell):
     mocker.patch("builtins.input", return_value="fullread")
     expected_line_num = 100
-    mock_subprocess = mocker.patch("src.command.subprocess.run")
+    mock_subprocess = mocker.patch("src.ssd_controller.subprocess.run")
     mock_subprocess.return_value = CompletedProcess(
         args=["python", "ssd.py", "R", "0"],
         returncode=0,
@@ -392,7 +392,7 @@ def test_WRITE_READ_AGING_실패_FAIL_WRITE_5번(mocker: MockerFixture, shell):
 def test_FULLREAD_reads를_형식에_맞게_보내는지(mocker: MockerFixture, shell):
     mocker.patch("builtins.input", return_value="fullread")
     expected_line_num = 100
-    mock_subprocess = mocker.patch("src.command.subprocess.run")
+    mock_subprocess = mocker.patch("src.ssd_controller.subprocess.run")
     arr_response = _do_run_and_get_result_from_buffer(shell).strip().splitlines()
     assert len(arr_response) == expected_line_num
 
