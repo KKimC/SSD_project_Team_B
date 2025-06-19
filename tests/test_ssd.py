@@ -219,18 +219,18 @@ def test_erase명령어는_size가0인경우_print_ssd_output_함수를_호출�
 
 def test_flush는_실행되고나면_update_buffer함수에_empty_다섯개를_리스트로_넘겨줘야한다(mocker, ssd_file_manager_mk, ssd_sut):
     dummy_buffer = ["1_W_20_ABC", "2_E_10_1", "3_empty", "4_empty", "5_empty"]
-    mocker.patch.object(ssd_sut, "get_buffer_list", return_value=dummy_buffer)
+    mocker.patch.object(ssd_sut, "get_buffer", return_value=dummy_buffer)
     ssd_file_manager_mk.read_ssd_nand.return_value = ["0x00000000"] * 100
 
     mock_update = mocker.patch.object(ssd_sut, "update_buffer")
 
     ssd_sut.flush()
 
-    mock_update.assert_called_once_with(["empty", "empty", "empty", "empty", "empty"])
+    mock_update.assert_called_once_with(["1_empty", "2_empty", "3_empty", "4_empty", "5_empty"])
 
 
 def test_flush는_실행되면_get_buffer함수를_호출해_버퍼에_담긴_파일_리스트를_받아온다(mocker, ssd_file_manager_mk, ssd_sut):
-    mock_get = mocker.patch.object(ssd_sut, "get_buffer_list", return_value=[])
+    mock_get = mocker.patch.object(ssd_sut, "get_buffer", return_value=[])
     ssd_file_manager_mk.read_ssd_nand.return_value = ["0x00000000"] * 100
 
     ssd_sut.flush()
@@ -246,7 +246,7 @@ def test_flush는_리스트_순서대로_함수를_수행해야한다(mocker, ss
         "4_empty",
         "5_empty"
     ]
-    mocker.patch.object(ssd_sut, "get_buffer_list", return_value=buffer_list)
+    mocker.patch.object(ssd_sut, "get_buffer", return_value=buffer_list)
 
     fake_nand = ["0x00000000"] * 100
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
@@ -260,14 +260,14 @@ def test_flush는_리스트_순서대로_함수를_수행해야한다(mocker, ss
     ssd_sut.flush()
 
     assert calls == [
-        ("W", 20, "ABC"),  # 첫 번째 호출: flush_write(20, "ABC")
-        ("E", 10, "1"),    # 두 번째 호출: flush_erase(10, "1")
+        ("W", 20, "ABC"),
+        ("E", 10, 1),
     ]
 
 
 def test_flush는_명령어가_W인경우_flush_write함수에_올바른_인자를_전달한다(mocker, ssd_file_manager_mk, ssd_sut):
-    buffer_list = ["1_W_20_ABC", "2_E_10_1", "3_empty", "4_empty", "5_empty"]
-    mocker.patch.object(ssd_sut, "get_buffer_list", return_value=buffer_list)
+    buffer_list = ["1_W_20_ABC", "2_empty", "3_empty", "4_empty", "5_empty"]
+    mocker.patch.object(ssd_sut, "get_buffer", return_value=buffer_list)
 
     fake_nand = ["0x00000000" for _ in range(100)]
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
@@ -276,12 +276,12 @@ def test_flush는_명령어가_W인경우_flush_write함수에_올바른_인자�
     ssd_sut.flush()
 
 
-    spy_flush_write.assert_called_with(20, "ABC")
+    spy_flush_write.assert_called_once_with(20, "ABC")
 
 
 def test_flush는_명령어가_E인경우_flush_erase함수에_올바른_인자를_전달한다(mocker, ssd_file_manager_mk, ssd_sut):
     buffer_list = ["1_W_20_ABC", "2_E_10_1", "3_empty", "4_empty", "5_empty"]
-    mocker.patch.object(ssd_sut, "get_buffer_list", return_value=buffer_list)
+    mocker.patch.object(ssd_sut, "get_buffer", return_value=buffer_list)
 
     fake_nand = ["0x00000000"] * 100
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
@@ -295,7 +295,7 @@ def test_flush는_명령어가_E인경우_flush_erase함수에_올바른_인자�
 
 def test_flush_에_들어오는_bufferlist_안이_전부_emtpy_인경우_아무_작업을_수행하지_않는다(mocker, ssd_file_manager_mk, ssd_sut):
     buffer_list = ["1_empty", "2_empty", "3_empty", "4_empty", "5_empty"]
-    mocker.patch.object(ssd_sut, "get_buffer_list", return_value=buffer_list)
+    mocker.patch.object(ssd_sut, "get_buffer", return_value=buffer_list)
 
     fake_nand = ["0x00000000"] * 100
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
