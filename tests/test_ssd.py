@@ -275,7 +275,6 @@ def test_flush는_명령어가_W인경우_flush_write함수에_올바른_인자�
     spy_flush_write = mocker.spy(ssd_sut, "flush_write")
     ssd_sut.flush()
 
-
     spy_flush_write.assert_called_once_with(20, "ABC")
 
 
