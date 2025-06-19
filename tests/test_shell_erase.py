@@ -8,6 +8,7 @@ from src.command import EraseCommand, ScriptCommand
 from src.constants import INVALID_COMMAND, MAX_ERASE_SIZE, TestScriptType
 from src.ssd_controller import SSDController
 from src.ssd_shell import SSDShell
+from src.utils.helpers import adjust_lba_and_count, normalize_lba_range
 
 
 def _do_run_and_get_result_from_buffer(shell):
@@ -188,3 +189,33 @@ def test_ERASERANGE_명령어정합성_기본(
 
     # act and assert
     _check_erase_commands_format(lba, mock_subprocess, shell, total)
+
+
+@pytest.mark.parametrize(
+    "start_lba, size, expected",
+    [
+        (80, 100, (80, 20)),
+        (0, 100, (0, 100)),
+        (50, -1, (50, 1)),
+        (50, -10, (41, 10)),
+        (10, -20, (0, 11)),
+    ],
+)
+def test_ERASE_LBA_SIZE조정하는헬퍼함수검증(start_lba, size, expected):
+    result = adjust_lba_and_count(start_lba, size)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "start_lba, end_lba, expected",
+    [
+        (30, 35, (30, 6)),
+        (40, 20, (20, 21)),
+        (99, 99, (99, 1)),
+    ],
+)
+def test_ERASERANGE_두LBA로부터_시작LBA_SIZE도출하는헬퍼함수검증(
+    start_lba, end_lba, expected
+):
+    result = normalize_lba_range(start_lba, end_lba)
+    assert result == expected
