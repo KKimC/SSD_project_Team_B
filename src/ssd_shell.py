@@ -3,44 +3,24 @@ from logger import Logger
 
 logger = Logger()
 
-from src.command import (
-    WriteCommand,
-    ReadCommand,
-    FullReadCommand,
-    FullWriteCommand,
-    ExitCommand,
-    ExitException,
-    HelpCommand,
-    Command,
-    ScriptCommand,
-)
 
-INVALID_COMMAND = "INVALID COMMAND"
+from src.command import (
+    ExitException,
+    Command,
+)
+from src.command_factory import CommandFactory
+from src.constants import INVALID_COMMAND
+from src.ssd_controller import SSDController
 
 
 class SSDShell:
-    COMMAND_MAP = {
-        "read": ReadCommand,
-        "write": WriteCommand,
-        "fullread": FullReadCommand,
-        "fullwrite": FullWriteCommand,
-        "exit": ExitCommand,
-        "help": HelpCommand,
-    }
-
     def __init__(self):
-        self.validator = {}
         self._is_running = True
+        self._receiver = SSDController()
 
     @property
     def is_running(self):
         return self._is_running
-
-    def _make_cmds_for_fullread(self):
-        list_cmds = []
-        for i in range(100):
-            list_cmds.append(f"ssd.py R {i}")
-        return list_cmds
 
     def run(self):
         command = self._parse_command()
@@ -51,7 +31,7 @@ class SSDShell:
 
         self._execute_command(command)
 
-    def _make_command(self) -> str or list[str]:
+    def _make_command(self) -> str:
         command = input("Shell> ")
         return command
 
@@ -63,20 +43,11 @@ class SSDShell:
             return None
 
         command_type = command_list[0]
-        command_class = self.COMMAND_MAP.get(command_type)
+        command_class = CommandFactory.create(command_type)
         if not command_class:
-            if command_type in [
-                "1_",
-                "1_FullWriteAndReadCompare",
-                "2_",
-                "2_PartialLBAWrite",
-                "3_",
-                "3_WriteReadAging",
-            ]:
-                return ScriptCommand(args=command_list)
             return None
 
-        return command_class(args=command_list)
+        return command_class(args=command_list, receiver=self._receiver)
 
     def _execute_command(self, command: Command):
         try:
