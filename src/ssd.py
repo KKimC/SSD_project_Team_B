@@ -38,12 +38,10 @@ class SSD:
         self.ssd_file_manager.patch_ssd_nand(nand)
         return value
 
-    @staticmethod
-    def get_buffer() -> List[str]:
+    def get_buffer(self) -> List[str]:
         return sorted(os.listdir('buffer'))
 
-    @staticmethod
-    def update_buffer(commands: List[str]) -> None:
+    def update_buffer(self, commands: List[str]) -> None:
         if len(commands) != 5:
             return
 
@@ -130,12 +128,6 @@ class SSD:
 
         updated_buffer_list = ["1_empty", "2_empty", "3_empty", "4_empty", "5_empty"]
         self.update_buffer(updated_buffer_list)
-
-    def get_buffer(self):
-        return
-
-    def update_buffer(self, updated_buffer_list):
-        pass
 
 def main():
     ssd = SSD()
