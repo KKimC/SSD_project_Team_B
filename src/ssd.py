@@ -81,7 +81,7 @@ def main():
         ssd.write(address, value)
 
     elif command == "E" and len(sys.argv) == 4:
-        size = int(sys.argv[4])
+        size = int(sys.argv[3])
         ssd.erase(address, size)
 
     elif command == "F":
