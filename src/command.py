@@ -4,6 +4,9 @@ import random
 import subprocess
 from typing import List
 from abc import abstractmethod, ABC
+from logger import Logger
+
+logger = Logger()
 
 
 def generate_random_hex() -> str:
@@ -65,10 +68,12 @@ class Command(ABC):
         self.args = args
 
     @abstractmethod
-    def is_valid(self) -> bool: ...
+    def is_valid(self) -> bool:
+        ...
 
     @abstractmethod
-    def execute(self): ...
+    def execute(self):
+        ...
 
     def _is_valid_8char_hex(self, write_value_str: str) -> bool:
         return bool(re.fullmatch(r"0x[0-9a-fA-F]{8}", write_value_str))
@@ -91,6 +96,7 @@ class WriteCommand(Command):
         lba_address, write_value = self.args[1:]
         return self._is_valid_lba(lba_address) and self._is_valid_8char_hex(write_value)
 
+    @logger.log_decorator("write execute")
     def execute(self):
         lba_address = str(self.args[1])
         hex_val = self.args[2]
@@ -129,6 +135,9 @@ class ReadCommand(Command):
         )
         read_value = result.stdout
         print(f"[Read] LBA {lba_address.zfill(2)} : {read_value}")
+        logger.print(
+            f"{self.__class__.__name__}.execute()", f"{lba_address},{read_value} "
+        )
         return read_value
 
 
@@ -260,7 +269,6 @@ class ScriptCommand(Command):
         read_command = ReadCommand(["read", str(lba_address)])
         result = read_command.execute()
         return result.strip() == value.strip()
-
 
 
 class HelpCommand(Command):
