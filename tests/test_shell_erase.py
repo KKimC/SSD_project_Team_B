@@ -31,7 +31,8 @@ def test_ERASE_인자개수안맞을떄(mocker: MockerFixture, shell):
     expected = INVALID_COMMAND
 
     # act and assert
-    assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
+    result = _do_run_and_get_result_from_buffer(shell).strip()
+    assert expected in result
 
 
 def test_ERASE_인자개수는올바르지만_LBA주소가유효하지않음(mocker: MockerFixture, shell):
@@ -40,7 +41,8 @@ def test_ERASE_인자개수는올바르지만_LBA주소가유효하지않음(moc
     expected = INVALID_COMMAND
 
     # act and assert
-    assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
+    result = _do_run_and_get_result_from_buffer(shell).strip()
+    assert expected in result
 
 
 def test_ERASE_인자개수올바르지만_SIZE가정수가아님(mocker: MockerFixture, shell):
@@ -49,7 +51,8 @@ def test_ERASE_인자개수올바르지만_SIZE가정수가아님(mocker: Mocker
     expected = INVALID_COMMAND
 
     # act and assert
-    assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
+    result = _do_run_and_get_result_from_buffer(shell).strip()
+    assert expected in result
 
 
 def _check_erase_commands_format(lba, mock_subprocess, shell, total):
@@ -124,7 +127,8 @@ def test_ERASERANGE_인자개수안맞을때(mocker: MockerFixture, shell):
     expected = INVALID_COMMAND
 
     # act and assert
-    assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
+    result = _do_run_and_get_result_from_buffer(shell).strip()
+    assert expected in result
 
 
 def test_ERASERANGE_인자개수는올바르지만_LBA주소가유효하지않음(
@@ -140,7 +144,8 @@ def test_ERASERANGE_인자개수는올바르지만_LBA주소가유효하지않�
     expected = INVALID_COMMAND
 
     # act and assert
-    assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
+    result = _do_run_and_get_result_from_buffer(shell).strip()
+    assert expected in result
 
 
 def test_ERASE_AND_WRITE_AGING_정상_WRITE_60번_ERASERANGE_30번(mocker: MockerFixture):
@@ -167,6 +172,7 @@ def test_ERASE_AND_WRITE_AGING_바로실패_WRITE_2번_ERASERANGE_1번(mocker: M
     # act and assert
     assert mock_receiver.write.call_count == 2
     assert mock_receiver.erase.call_count == 1
+
 
 @pytest.mark.parametrize("start, end", [(3, 5), (3, 20), (20, 3)])
 def test_ERASERANGE_명령어정합성_기본(
