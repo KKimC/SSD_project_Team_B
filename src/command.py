@@ -180,3 +180,13 @@ class HelpCommand(Command):
     def execute(self):
         print(HELP_TEXT)
         return
+
+
+class FlushCommand(Command):
+    def is_valid(self) -> bool:
+        if len(self.args) != 1:
+            return False
+        return True
+
+    def execute(self):
+        self.receiver.flush()

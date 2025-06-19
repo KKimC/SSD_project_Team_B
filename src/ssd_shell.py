@@ -39,9 +39,6 @@ class SSDShell:
 
         for command_type in test_script_commands:
             command_class = CommandFactory.create(command_type)
-            if not command_class:
-                return None
-
             command = command_class(args=[command_type], receiver=self._receiver)
             if not command or not command.is_valid():
                 print(INVALID_COMMAND)

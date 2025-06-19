@@ -6,6 +6,7 @@ from src.command import (
     ExitCommand,
     HelpCommand,
     ScriptCommand,
+    FlushCommand,
 )
 
 
@@ -24,6 +25,8 @@ class CommandFactory:
             return ExitCommand
         if command_str == "help":
             return HelpCommand
+        if command_str == "flush":
+            return FlushCommand
         if (
             (
                 command_str.startswith("1_")

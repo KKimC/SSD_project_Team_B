@@ -30,3 +30,8 @@ class SSDController:
     def full_write(self, hex_val: str):
         for lba in range(100):
             self.write(str(lba), hex_val)
+
+    def flush(self):
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        ssd_file_path = os.path.join(script_dir, "ssd.py")
+        subprocess.run(["python", ssd_file_path, "F"])
