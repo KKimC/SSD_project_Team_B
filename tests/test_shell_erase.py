@@ -87,7 +87,7 @@ def test_ERASE_AND_WRITE_AGING_정상_WRITE_60번_ERASERANGE_30번(mocker: Mocke
     shell.run()
     # act and assert
     assert mock_receiver.write.call_count == 60
-    assert mock_receiver.eraserange.call_count == 30
+    assert mock_receiver.erase.call_count == 30
 
 
 def test_ERASE_AND_WRITE_AGING_바로실패_WRITE_2번_ERASERANGE_1번(mocker: MockerFixture):
@@ -100,4 +100,4 @@ def test_ERASE_AND_WRITE_AGING_바로실패_WRITE_2번_ERASERANGE_1번(mocker: M
     shell.run()
     # act and assert
     assert mock_receiver.write.call_count == 2
-    assert mock_receiver.eraserange.call_count == 1
+    assert mock_receiver.erase.call_count == 1

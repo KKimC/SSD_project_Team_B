@@ -190,9 +190,7 @@ class ScriptCommand(Command):
             self.receiver.write(str(lba_address_list[0]), write_value)
             # Overwrite
             self.receiver.write(str(lba_address_list[0]), write_value)
-            self.receiver.eraserange(
-                str(lba_address_list[0]), str(lba_address_list[-1])
-            )
+            self.receiver.erase(str(lba_address_list[0]), str(3))
             for lba_address in lba_address_list:
                 self._read_compare_and_check_pass_or_fail(lba_address, EMPTY_VALUE)
 
