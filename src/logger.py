@@ -52,6 +52,6 @@ class Logger:
     def print(self, func_name: str, message: str):
         timestamp = datetime.now().strftime("[%y.%m.%d %H:%M]")
         left = f"{timestamp} {func_name}"
-        aligned = f"{left:<45}: {message}"  # 좌측 정렬, 총 45칸 맞춤
+        aligned = f"{left:<51}: {message}"  # 좌측 정렬, 총 51칸 맞춤
         print(aligned)
         self._write_to_file(aligned)
