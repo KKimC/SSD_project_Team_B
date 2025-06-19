@@ -85,6 +85,19 @@ class ExitCommand(Command):
         raise ExitException
 
 
+def erase_per_chunk(receiver, lba, total):
+    num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
+    for i in range(num_cmds):
+        if total < MAX_ERASE_SIZE:
+            size = total
+            total = 0
+        else:
+            size = MAX_ERASE_SIZE
+            total -= MAX_ERASE_SIZE
+        receiver.erase(str(lba), str(size))
+        lba += MAX_ERASE_SIZE
+
+
 class EraseCommand(Command):
     def is_valid(self) -> bool:
         if len(self.args) != 3:
@@ -98,20 +111,27 @@ class EraseCommand(Command):
 
     def execute(self):
         lba, size = int(self.args[1]), int(self.args[2])
-        lba_1, lba_2 = int(self.args[1]), int(self.args[2])
-        end_lba = lba + size - 1
-        total = size
 
-        num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
-        for i in range(num_cmds):
-            if total < MAX_ERASE_SIZE:
-                size = total
-                total = 0
-            else:
-                size = MAX_ERASE_SIZE
-                total -= MAX_ERASE_SIZE
-            self.receiver.erase(str(lba), str(size))
-            lba += MAX_ERASE_SIZE
+        # adjust lba, total for minus
+        lba += (int(size) + 1) if int(size) < 0 else 0
+        total = abs(int(size))
+
+        # adjust for left side
+        #            0
+        # ssd        |------- ...
+        # req     |------...
+        if lba < 0:
+            total += lba
+            lba = 0
+
+        # adjust for right side
+        #                99
+        # ssd   ....------|
+        # req     ...---------|
+        if lba + total > 99:
+            total = 99 - lba + 1
+
+        erase_per_chunk(self.receiver, lba, total)
 
 
 class EraseRangeCommand(Command):
@@ -132,16 +152,7 @@ class EraseRangeCommand(Command):
         lba = lba_1 if lba_1 < lba_2 else lba_2
         total = end_lba - lba + 1
 
-        num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
-        for i in range(num_cmds):
-            if total < MAX_ERASE_SIZE:
-                size = total
-                total = 0
-            else:
-                size = MAX_ERASE_SIZE
-                total -= MAX_ERASE_SIZE
-            self.receiver.erase(str(lba), str(size))
-            lba += MAX_ERASE_SIZE
+        erase_per_chunk(self.receiver, lba, total)
 
 
 class ScriptCommand(Command):
