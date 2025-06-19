@@ -1,3 +1,9 @@
+import re
+from logger import Logger
+
+logger = Logger()
+
+
 from src.command import (
     ExitException,
     Command,
@@ -20,6 +26,7 @@ class SSDShell:
         command = self._parse_command()
         if not command or not command.is_valid():
             print(INVALID_COMMAND)
+            logger.print("Shell.run()", f"INVALID COMMAND입니다.")
             return
 
         self._execute_command(command)

@@ -4,5 +4,6 @@
 /tests/ssd_output.txt
 /src/__pycache__/
 /tests/__pycache__/
+/logs
 /src/ssd_nand.txt
 /src/ssd_output.txt

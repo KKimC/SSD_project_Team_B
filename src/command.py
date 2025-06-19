@@ -1,6 +1,9 @@
 import random
 from typing import List
 from abc import abstractmethod, ABC
+from logger import Logger
+
+logger = Logger()
 
 from src.constants import HELP_TEXT
 from src.ssd_controller import SSDController
@@ -22,10 +25,12 @@ class Command(ABC):
         self.receiver = receiver
 
     @abstractmethod
-    def is_valid(self) -> bool: ...
+    def is_valid(self) -> bool:
+        ...
 
     @abstractmethod
-    def execute(self): ...
+    def execute(self):
+        ...
 
 
 class WriteCommand(Command):
@@ -35,6 +40,7 @@ class WriteCommand(Command):
         lba_address, write_value = self.args[1:]
         return is_valid_lba_address(lba_address) and is_valid_8char_hex(write_value)
 
+    @logger.log_decorator("write execute")
     def execute(self):
         lba_address = self.args[1]
         hex_val = self.args[2]
