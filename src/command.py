@@ -1,12 +1,13 @@
-import os
-import re
 import random
-import subprocess
 from typing import List
 from abc import abstractmethod, ABC
+from logger import Logger
 
-from src.constants import HELP_TEXT
+logger = Logger()
+
+from src.constants import HELP_TEXT, MAX_ERASE_SIZE
 from src.ssd_controller import SSDController
+from src.utils.validators import is_int, is_valid_lba_address, is_valid_8char_hex
 
 
 def generate_random_hex() -> str:
@@ -24,20 +25,12 @@ class Command(ABC):
         self.receiver = receiver
 
     @abstractmethod
-    def is_valid(self) -> bool: ...
+    def is_valid(self) -> bool:
+        ...
 
     @abstractmethod
-    def execute(self): ...
-
-    def _is_valid_8char_hex(self, write_value_str: str) -> bool:
-        return bool(re.fullmatch(r"0x[0-9a-fA-F]{8}", write_value_str))
-
-    def _is_valid_lba(self, value: str) -> bool:
-        try:
-            num = int(value)
-            return 0 <= num <= 99
-        except ValueError:
-            return False
+    def execute(self):
+        ...
 
 
 class WriteCommand(Command):
@@ -45,7 +38,7 @@ class WriteCommand(Command):
         if len(self.args) != 3:
             return False
         lba_address, write_value = self.args[1:]
-        return self._is_valid_lba(lba_address) and self._is_valid_8char_hex(write_value)
+        return is_valid_lba_address(lba_address) and is_valid_8char_hex(write_value)
 
     def execute(self):
         lba_address = self.args[1]
@@ -58,7 +51,7 @@ class ReadCommand(Command):
         if len(self.args) < 2:
             return False
 
-        return self._is_valid_lba(self.args[1])
+        return is_valid_lba_address(self.args[1])
 
     def execute(self):
         lba_address = self.args[1]
@@ -80,7 +73,7 @@ class FullWriteCommand(Command):
     def is_valid(self) -> bool:
         if len(self.args) != 2:
             return False
-        return self._is_valid_8char_hex(self.args[1])
+        return is_valid_8char_hex(self.args[1])
 
     def execute(self):
         hex_val = self.args[1]
@@ -95,6 +88,65 @@ class ExitCommand(Command):
 
     def execute(self):
         raise ExitException
+
+
+class EraseCommand(Command):
+    def is_valid(self) -> bool:
+        if len(self.args) != 3:
+            return False
+
+        lba_address, size = self.args[1:]
+        if not is_valid_lba_address(lba_address):
+            return False
+
+        return is_int(size)
+
+    def execute(self):
+        lba, size = int(self.args[1]), int(self.args[2])
+        lba_1, lba_2 = int(self.args[1]), int(self.args[2])
+        end_lba = lba + size - 1
+        total = size
+
+        num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
+        for i in range(num_cmds):
+            if total < MAX_ERASE_SIZE:
+                size = total
+                total = 0
+            else:
+                size = MAX_ERASE_SIZE
+                total -= MAX_ERASE_SIZE
+            self.receiver.erase(str(lba), str(size))
+            lba += MAX_ERASE_SIZE
+
+
+class EraseRangeCommand(Command):
+    def is_valid(self) -> bool:
+        if len(self.args) != 3:
+            return False
+
+        start_lba_address, end_lba_address = self.args[1:]
+        if is_valid_lba_address(start_lba_address) and is_valid_lba_address(
+            end_lba_address
+        ):
+            return True
+        return False
+
+    def execute(self):
+        lba_1, lba_2 = int(self.args[1]), int(self.args[2])
+        end_lba = lba_2 if lba_1 < lba_2 else lba_1
+        lba = lba_1 if lba_1 < lba_2 else lba_2
+        total = end_lba - lba + 1
+
+        num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
+        for i in range(num_cmds):
+            if total < MAX_ERASE_SIZE:
+                size = total
+                total = 0
+            else:
+                size = MAX_ERASE_SIZE
+                total -= MAX_ERASE_SIZE
+            self.receiver.erase(str(lba), str(size))
+            lba += MAX_ERASE_SIZE
 
 
 class ScriptCommand(Command):
