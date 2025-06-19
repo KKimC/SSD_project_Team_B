@@ -34,4 +34,14 @@ class SSDController:
             self.write(str(lba_address), hex_val)
 
     def erase(self, lba: str, size: str):
-        pass
+        env = os.environ.copy()
+        env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
+
+        result = subprocess.run(
+            ["python", "ssd.py", "E", lba, size],
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        read_value = result.stdout
+        print(f"[Erase] LBA {lba.zfill(2)}, size:{size}")

@@ -1,8 +1,9 @@
 import random
 from typing import List
 from abc import abstractmethod, ABC
+from logger import Logger
 
-from src.constants import HELP_TEXT, TestScriptType, EMPTY_VALUE
+from src.constants import HELP_TEXT, TestScriptType, EMPTY_VALUE, MAX_ERASE_SIZE
 from src.ssd_controller import SSDController
 from src.utils.validators import (
     is_int,
@@ -10,6 +11,8 @@ from src.utils.validators import (
     is_valid_8char_hex,
     is_right_script_name,
 )
+
+logger = Logger()
 
 
 def generate_random_hex() -> str:
@@ -27,10 +30,12 @@ class Command(ABC):
         self.receiver = receiver
 
     @abstractmethod
-    def is_valid(self) -> bool: ...
+    def is_valid(self) -> bool:
+        ...
 
     @abstractmethod
-    def execute(self): ...
+    def execute(self):
+        ...
 
 
 class WriteCommand(Command):
@@ -91,7 +96,6 @@ class ExitCommand(Command):
 
 
 class EraseCommand(Command):
-
     def is_valid(self) -> bool:
         if len(self.args) != 3:
             return False
@@ -103,11 +107,24 @@ class EraseCommand(Command):
         return is_int(size)
 
     def execute(self):
-        pass
+        lba, size = int(self.args[1]), int(self.args[2])
+        lba_1, lba_2 = int(self.args[1]), int(self.args[2])
+        end_lba = lba + size - 1
+        total = size
+
+        num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
+        for i in range(num_cmds):
+            if total < MAX_ERASE_SIZE:
+                size = total
+                total = 0
+            else:
+                size = MAX_ERASE_SIZE
+                total -= MAX_ERASE_SIZE
+            self.receiver.erase(str(lba), str(size))
+            lba += MAX_ERASE_SIZE
 
 
 class EraseRangeCommand(Command):
-
     def is_valid(self) -> bool:
         if len(self.args) != 3:
             return False
@@ -120,7 +137,21 @@ class EraseRangeCommand(Command):
         return False
 
     def execute(self):
-        pass
+        lba_1, lba_2 = int(self.args[1]), int(self.args[2])
+        end_lba = lba_2 if lba_1 < lba_2 else lba_1
+        lba = lba_1 if lba_1 < lba_2 else lba_2
+        total = end_lba - lba + 1
+
+        num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
+        for i in range(num_cmds):
+            if total < MAX_ERASE_SIZE:
+                size = total
+                total = 0
+            else:
+                size = MAX_ERASE_SIZE
+                total -= MAX_ERASE_SIZE
+            self.receiver.erase(str(lba), str(size))
+            lba += MAX_ERASE_SIZE
 
 
 class ScriptCommand(Command):
@@ -157,11 +188,18 @@ class ScriptCommand(Command):
             self._execute_script_4()
 
     def _execute_script_1(self):
-        for lba_address in range(100):
+        for i in range(20):
             write_value_list = [generate_random_hex() for _ in range(5)]
+
+            lba_address = i * 5
             for value in write_value_list:
                 self.receiver.write(str(lba_address), value)
+                lba_address += 1
+
+            lba_address = i * 5
+            for value in write_value_list:
                 self._read_compare_and_check_pass_or_fail(lba_address, value)
+                lba_address += 1
 
     def _execute_script_2(self):
         for _ in range(30):

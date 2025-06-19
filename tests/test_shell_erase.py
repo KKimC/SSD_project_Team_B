@@ -4,8 +4,8 @@ import sys
 import pytest
 from pytest_mock import MockerFixture
 
-from src.command import ScriptCommand
-from src.constants import INVALID_COMMAND, TestScriptType
+from src.command import EraseCommand, ScriptCommand
+from src.constants import INVALID_COMMAND, MAX_ERASE_SIZE, TestScriptType
 from src.ssd_controller import SSDController
 from src.ssd_shell import SSDShell
 
@@ -50,6 +50,57 @@ def test_ERASE_인자개수올바르지만_SIZE가정수가아님(mocker: Mocker
 
     # act and assert
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
+
+
+def _check_erase_commands_format(lba, mock_subprocess, num_cmds, shell, total):
+    _do_run_and_get_result_from_buffer(shell)
+    for i in range(num_cmds):
+        if total < MAX_ERASE_SIZE:
+            size = total
+            total = 0
+        else:
+            size = MAX_ERASE_SIZE
+            total -= MAX_ERASE_SIZE
+        expected_cmd = ["python", "ssd.py", "E", f"{lba}", f"{size}"]
+        actual_call = mock_subprocess.call_args_list[i]
+        actual_args = actual_call.args[0]
+        assert actual_args == expected_cmd, f"LBA {i} 에서 명령어 불일치: {actual_args}"
+        lba += MAX_ERASE_SIZE
+
+
+@pytest.fixture
+def mock_subprocess(mocker: MockerFixture):
+    return mocker.patch("src.ssd_controller.subprocess.run")
+
+
+@pytest.mark.parametrize("start,size", [(3, 5), (3, 10)])
+def test_ERASE_명령어정합성_기본(
+    mocker: MockerFixture, mock_subprocess, shell, start, size
+):
+    # arrange
+    mocker.patch("builtins.input", return_value=f"erase {start} {size}")
+    lba = int(start)
+    total = int(size)
+    num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
+
+    # act and assert
+    _check_erase_commands_format(lba, mock_subprocess, num_cmds, shell, total)
+
+
+@pytest.mark.parametrize("start, size", [(3, -2)])
+def test_ERASE_명령어정합성_음수크기(
+    mocker: MockerFixture, mock_subprocess, shell, start, size
+):
+    # arrange
+    lba = int(start)
+    _size = int(size)
+    lba += _size + 1 if _size >= 0 else 0
+    total = abs(_size)
+    mocker.patch("builtins.input", return_value=f"erase {start} {total}")
+    num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
+
+    # act and assert
+    _check_erase_commands_format(lba, mock_subprocess, num_cmds, shell, total)
 
 
 def test_ERASERANGE_인자개수안맞을때(mocker: MockerFixture, shell):
@@ -101,3 +152,19 @@ def test_ERASE_AND_WRITE_AGING_바로실패_WRITE_2번_ERASERANGE_1번(mocker: M
     # act and assert
     assert mock_receiver.write.call_count == 2
     assert mock_receiver.erase.call_count == 1
+
+@pytest.mark.parametrize("start, end", [(3, 5), (3, 20), (20, 3)])
+def test_ERASERANGE_명령어정합성_기본(
+    mocker: MockerFixture, mock_subprocess, shell, start, end
+):
+    # arrange
+    mocker.patch("builtins.input", return_value=f"erase_range {start} {end}")
+    lba_1 = int(start)
+    lba_2 = int(end)
+    lba = lba_1 if lba_1 < lba_2 else lba_2
+    end_lba = lba_1 if lba_1 > lba_2 else lba_2
+    total = end_lba - lba + 1
+    num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
+
+    # act and assert
+    _check_erase_commands_format(lba, mock_subprocess, num_cmds, shell, total)
