@@ -6,11 +6,13 @@ from src.command import (
 )
 from src.command_factory import CommandFactory
 from src.constants import INVALID_COMMAND
+from src.ssd_controller import SSDController
 
 
 class SSDShell:
     def __init__(self):
         self._is_running = True
+        self._receiver = SSDController()
 
     @property
     def is_running(self):
@@ -40,7 +42,7 @@ class SSDShell:
         if not command_class:
             return None
 
-        return command_class(args=command_list)
+        return command_class(args=command_list, receiver=self._receiver)
 
     def _execute_command(self, command: Command):
         try:

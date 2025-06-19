@@ -6,6 +6,7 @@ from typing import List
 from abc import abstractmethod, ABC
 
 from src.constants import HELP_TEXT
+from src.ssd_controller import SSDController
 
 
 def generate_random_hex() -> str:
@@ -18,8 +19,9 @@ class ExitException(Exception):
 
 
 class Command(ABC):
-    def __init__(self, args: List[str]):
+    def __init__(self, args: List[str], receiver: SSDController):
         self.args = args
+        self.receiver = receiver
 
     @abstractmethod
     def is_valid(self) -> bool: ...
@@ -39,9 +41,6 @@ class Command(ABC):
 
 
 class WriteCommand(Command):
-    def __init__(self, args: List[str]):
-        super().__init__(args)
-
     def is_valid(self) -> bool:
         if len(self.args) != 3:
             return False
@@ -49,20 +48,12 @@ class WriteCommand(Command):
         return self._is_valid_lba(lba_address) and self._is_valid_8char_hex(write_value)
 
     def execute(self):
-        lba_address = str(self.args[1])
+        lba_address = self.args[1]
         hex_val = self.args[2]
-        result = subprocess.run(
-            ["python", "ssd.py", "W", lba_address, hex_val],
-            capture_output=True,
-            text=True,
-        )
-        print("[Write] Done")
+        self.receiver.write(lba_address, hex_val)
 
 
 class ReadCommand(Command):
-    def __init__(self, args: List[str]):
-        super().__init__(args)
-
     def is_valid(self) -> bool:
         if len(self.args) < 2:
             return False
@@ -70,22 +61,8 @@ class ReadCommand(Command):
         return self._is_valid_lba(self.args[1])
 
     def execute(self):
-        lba_address = str(self.args[1])
-
-        env = os.environ.copy()
-        env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
-
-        env = os.environ.copy()
-        env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
-
-        result = subprocess.run(
-            ["python", "ssd.py", "R", lba_address],
-            capture_output=True,
-            text=True,
-            env=env,
-        )
-        read_value = result.stdout
-        print(f"[Read] LBA {lba_address.zfill(2)} : {read_value}")
+        lba_address = self.args[1]
+        read_value = self.receiver.read(lba_address)
         return read_value
 
 
@@ -96,40 +73,18 @@ class FullReadCommand(Command):
         return True
 
     def execute(self):
-        list_cmds = self._make_cmds_for_fullread()
-        env = os.environ.copy()
-        env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
-        for i in range(100):
-            result = subprocess.run(
-                ["python", "ssd.py", "R", f"{i}"],
-                capture_output=True,
-                text=True,
-                env=env,
-            )
-            print(result.stdout.strip("\n"))
-
-    def _make_cmds_for_fullread(self):
-        list_cmds = []
-        for i in range(100):
-            list_cmds.append(f"ssd.py R {i}")
-        return list_cmds
+        self.receiver.full_read()
 
 
 class FullWriteCommand(Command):
-    def __init__(self, args: List[str]):
-        super().__init__(args)
-
     def is_valid(self) -> bool:
         if len(self.args) != 2:
             return False
         return self._is_valid_8char_hex(self.args[1])
 
     def execute(self):
-        for lba in range(100):
-            cmd = ["python", "ssd.py", "W", str(lba), self.args[1]]
-            result = subprocess.run(cmd)
-        print("[Write] Done")
-        return
+        hex_val = self.args[1]
+        self.receiver.full_write(hex_val)
 
 
 class ExitCommand(Command):
@@ -143,8 +98,8 @@ class ExitCommand(Command):
 
 
 class ScriptCommand(Command):
-    def __init__(self, args: List[str]):
-        super().__init__(args)
+    def __init__(self, args: List[str], receiver: SSDController):
+        super().__init__(args, receiver)
         self._test_script_type = ""
 
     def is_valid(self) -> bool:
@@ -171,51 +126,41 @@ class ScriptCommand(Command):
             self._execute_script_3()
 
     def _execute_script_1(self):
-        lba_address = 0
-        while lba_address < 100:
+        for lba_address in range(100):
             write_value_list = [generate_random_hex() for _ in range(5)]
             for value in write_value_list:
-                command_list = ["write", str(lba_address), value]
-                WriteCommand(command_list).execute()
-                if self._read_compare(lba_address, value):
-                    print("PASS")
-                else:
-                    print("FAIL")
-                    raise ExitException
-                lba_address += 1
+                self.receiver.write(str(lba_address), value)
+                self._read_compare_and_check_pass_or_fail(lba_address, value)
 
     def _execute_script_2(self):
         for _ in range(30):
             write_value = generate_random_hex()
             lba_address_list = [4, 0, 3, 1, 2]
             for write_lba_address in lba_address_list:
-                command_list = ["write", str(write_lba_address), write_value]
-                WriteCommand(command_list).execute()
-
+                self.receiver.write(str(write_lba_address), write_value)
             for read_lba_address in range(5):
-                if self._read_compare(read_lba_address, write_value):
-                    print("PASS")
-                else:
-                    print("FAIL")
-                    raise ExitException
+                self._read_compare_and_check_pass_or_fail(read_lba_address, write_value)
 
     def _execute_script_3(self):
         lba_address_list = [0, 99]
         for _ in range(200):
             write_value_list = [generate_random_hex()] * 2
             for i, lba_address in enumerate(lba_address_list):
-                WriteCommand(["write", lba_address, write_value_list[i]]).execute()
-
+                self.receiver.write(str(lba_address), write_value_list[i])
             for i, lba_address in enumerate(lba_address_list):
-                if self._read_compare(lba_address, write_value_list[i]):
-                    print("PASS")
-                else:
-                    print("FAIL")
-                    raise ExitException
+                self._read_compare_and_check_pass_or_fail(
+                    lba_address, write_value_list[i]
+                )
+
+    def _read_compare_and_check_pass_or_fail(self, read_lba_address, write_value):
+        if self._read_compare(read_lba_address, write_value):
+            print("PASS")
+        else:
+            print("FAIL")
+            raise ExitException
 
     def _read_compare(self, lba_address: int, value: str) -> bool:
-        read_command = ReadCommand(["read", str(lba_address)])
-        result = read_command.execute()
+        result = self.receiver.read(str(lba_address))
         return result.strip() == value.strip()
 
 
