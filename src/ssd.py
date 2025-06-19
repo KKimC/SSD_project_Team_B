@@ -1,8 +1,9 @@
+import shutil
 import sys
 import re
 import os
 from ssd_file_manager import SSDFileManager
-
+from typing import List
 
 class SSD:
     def __init__(self):
@@ -36,6 +37,27 @@ class SSD:
         nand[address] = value
         self.ssd_file_manager.patch_ssd_nand(nand)
         return value
+
+    def get_buffer(self) -> List[str]:
+        return sorted(os.listdir('buffer'))
+
+    def update_buffer(self, commands: List[str]) -> None:
+        if len(commands) != 5:
+            return
+
+        buffer_dir = 'buffer'
+
+        if os.path.exists(buffer_dir):
+            shutil.rmtree(buffer_dir)
+        os.makedirs(buffer_dir, exist_ok=True)
+
+        for idx, command in enumerate(commands[:5], start=1):
+            file_path = os.path.join(buffer_dir, f"{idx}_temp")
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(command)
+
+            target_path = os.path.join(buffer_dir, command)
+            os.replace(file_path, target_path)
 
     def erase(self, address=-1, size=0):
         MAX_ERASE_SIZE = 10
@@ -106,13 +128,6 @@ class SSD:
 
         updated_buffer_list = ["1_empty", "2_empty", "3_empty", "4_empty", "5_empty"]
         self.update_buffer(updated_buffer_list)
-
-    def get_buffer(self):
-        return
-
-    def update_buffer(self, updated_buffer_list):
-        pass
-
 
 def main():
     ssd = SSD()

@@ -11,6 +11,16 @@ class SSDFileManager():
             with open('ssd_output.txt', 'w', encoding='utf-8') as f:
                 f.write("")
 
+        buffer_dir = 'buffer'
+        if not os.path.exists(buffer_dir):
+            os.makedirs(buffer_dir)
+
+        for i in range(1, 6):
+            buffer_file = os.path.join(buffer_dir, f"{i}_empty")
+            if not os.path.exists(buffer_file):
+                with open(buffer_file, 'w', encoding='utf-8') as f:
+                    f.write("")
+
     def read_ssd_nand(self):
         with open('ssd_nand.txt', 'r', encoding='utf-8') as file:
             lines = file.readlines()

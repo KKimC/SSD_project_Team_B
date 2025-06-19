@@ -1,3 +1,6 @@
+import os.path
+import shutil
+
 import pytest
 import sys
 import src.ssd
@@ -140,6 +143,24 @@ def test_ssd모듈의_write함수는_cmd에서_W명령어로_정상적으로_실
 
     ssd_write_mock.assert_called_once_with(2, '0xAAAABBBB')
 
+def test_update_buffer_후_버퍼에_파일생성이_잘_되었는가(ssd_sut):
+    expected_cmds = ["1_W_1_0x12345678", "2_W_2_0x12345677", "3_W_3_0x12345676", "4_empty", "5_empty"]
+
+    buffer_path = "buffer"
+    if os.path.exists(buffer_path):
+        shutil.rmtree(buffer_path)
+    os.makedirs(buffer_path)
+    ssd_sut.update_buffer(expected_cmds)
+
+    result = sorted(os.listdir(buffer_path))
+    assert result == expected_cmds
+
+def test_update_buffer_후_get_buffer_실행시_기대했던_값으로_명령어를_받아올_수_있는가(ssd_sut):
+    expected_cmds = ["1_W_1_0x12345678", "2_W_2_0x12345677", "3_W_3_0x12345676", "4_E_1_10", "5_E_11_20"]
+
+    ssd_sut.update_buffer(expected_cmds)
+    result = ssd_sut.get_buffer()
+    assert result == expected_cmds
 
 def test_erase명령어_잘못된LBA주소_입력시_print_ssd_output함수를_호출하는가(ssd_file_manager_mk, ssd_sut):
     ssd_sut.erase(WRONG_LBA_ADDRESS)
