@@ -90,8 +90,7 @@ class SSD:
 
         for entry in buffer_list:
             parts = entry.split('_')
-            # ["1", "W", "20", "ABC"] 또는 ["3", "empty"] 형태
-            if len(parts) < 2:
+            if len(parts) < 2: # empty case
                 continue
 
             cmd = parts[1]
@@ -107,7 +106,6 @@ class SSD:
 
         updated_buffer_list = ["1_empty", "2_empty", "3_empty", "4_empty", "5_empty"]
         self.update_buffer(updated_buffer_list)
-
 
     def get_buffer(self):
         return
@@ -143,9 +141,8 @@ def main():
         size = int(sys.argv[3])
         ssd.erase(address, size)
 
-    elif command == "F":
-        pass
-        ## Flush
+    elif command == "F" and len(sys.argv) == 1:
+        ssd.flush()
 
     else:
         ssd.ssd_file_manager.print_ssd_output("ERROR")
