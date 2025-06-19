@@ -11,22 +11,13 @@ from src.command import (
     Command,
     ScriptCommand,
 )
+from src.command_factory import CommandFactory
 
 INVALID_COMMAND = "INVALID COMMAND"
 
 
 class SSDShell:
-    COMMAND_MAP = {
-        "read": ReadCommand,
-        "write": WriteCommand,
-        "fullread": FullReadCommand,
-        "fullwrite": FullWriteCommand,
-        "exit": ExitCommand,
-        "help": HelpCommand,
-    }
-
     def __init__(self):
-        self.validator = {}
         self._is_running = True
 
     @property
@@ -59,17 +50,8 @@ class SSDShell:
             return None
 
         command_type = command_list[0]
-        command_class = self.COMMAND_MAP.get(command_type)
+        command_class = CommandFactory.create(command_type)
         if not command_class:
-            if command_type in [
-                "1_",
-                "1_FullWriteAndReadCompare",
-                "2_",
-                "2_PartialLBAWrite",
-                "3_",
-                "3_WriteReadAging",
-            ]:
-                return ScriptCommand(args=command_list)
             return None
 
         return command_class(args=command_list)
