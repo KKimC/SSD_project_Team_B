@@ -41,12 +41,12 @@ class SSD:
 
         # optimizing
         buffer_list = self.get_buffer()
-        buffer_list = []
+        print(buffer_list)
         if len(buffer_list) == 5:
             self.flush()
         else:
             self.optimization()
-        self.insert_command(self.get_buffer(), f'w_{address}_{value}')
+        self.insert_command(self.get_buffer(), f'W_{address}_{value}')
 
         # 얘는 flush에 들어가야 되는 부분
         # nand = self.ssd_file_manager.read_ssd_nand()
@@ -97,7 +97,7 @@ class SSD:
             self.flush()
         else:
             self.optimization()
-        self.insert_command(self.get_buffer(), f'w_{address}_0x00000000')
+        self.insert_command(self.get_buffer(), f'E_{address}_{size}')
 
         return "OK"
 
@@ -151,6 +151,7 @@ class SSD:
 
         updated_buffer_list = ["1_empty", "2_empty", "3_empty", "4_empty", "5_empty"]
         self.update_buffer(updated_buffer_list)
+
     def fast_read(self, address):
         buffer = self.get_buffer()
         result = self.process_commands_in_order(buffer)
