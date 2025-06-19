@@ -5,7 +5,7 @@ from logger import Logger
 
 logger = Logger()
 
-from src.constants import HELP_TEXT
+from src.constants import HELP_TEXT, MAX_ERASE_SIZE
 from src.ssd_controller import SSDController
 from src.utils.validators import is_int, is_valid_lba_address, is_valid_8char_hex
 
@@ -102,7 +102,21 @@ class EraseCommand(Command):
         return is_int(size)
 
     def execute(self):
-        pass
+        lba, size = int(self.args[1]), int(self.args[2])
+        lba_1, lba_2 = int(self.args[1]), int(self.args[2])
+        end_lba = lba + size - 1
+        total = size
+
+        num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
+        for i in range(num_cmds):
+            if total < MAX_ERASE_SIZE:
+                size = total
+                total = 0
+            else:
+                size = MAX_ERASE_SIZE
+                total -= MAX_ERASE_SIZE
+            self.receiver.erase(str(lba), str(size))
+            lba += MAX_ERASE_SIZE
 
 
 class EraseRangeCommand(Command):
@@ -118,7 +132,21 @@ class EraseRangeCommand(Command):
         return False
 
     def execute(self):
-        pass
+        lba_1, lba_2 = int(self.args[1]), int(self.args[2])
+        end_lba = lba_2 if lba_1 < lba_2 else lba_1
+        lba = lba_1 if lba_1 < lba_2 else lba_2
+        total = end_lba - lba + 1
+
+        num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
+        for i in range(num_cmds):
+            if total < MAX_ERASE_SIZE:
+                size = total
+                total = 0
+            else:
+                size = MAX_ERASE_SIZE
+                total -= MAX_ERASE_SIZE
+            self.receiver.erase(str(lba), str(size))
+            lba += MAX_ERASE_SIZE
 
 
 class ScriptCommand(Command):
