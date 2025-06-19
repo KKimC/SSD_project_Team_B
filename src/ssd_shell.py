@@ -17,9 +17,9 @@ from src.ssd_controller import SSDController
 
 
 class SSDShell:
-    def __init__(self):
+    def __init__(self, receiver=None):
         self._is_running = True
-        self._receiver = SSDController()
+        self._receiver = receiver or SSDController()
 
     @property
     def is_running(self):

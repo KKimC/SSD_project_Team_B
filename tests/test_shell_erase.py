@@ -4,8 +4,9 @@ import sys
 import pytest
 from pytest_mock import MockerFixture
 
-from src.command import EraseCommand
-from src.constants import INVALID_COMMAND, MAX_ERASE_SIZE
+from src.command import EraseCommand, ScriptCommand
+from src.constants import INVALID_COMMAND, MAX_ERASE_SIZE, TestScriptType
+from src.ssd_controller import SSDController
 from src.ssd_shell import SSDShell
 
 
@@ -126,6 +127,31 @@ def test_ERASERANGE_인자개수는올바르지만_LBA주소가유효하지않�
     # act and assert
     assert _do_run_and_get_result_from_buffer(shell).strip() == expected.strip()
 
+
+def test_ERASE_AND_WRITE_AGING_정상_WRITE_60번_ERASERANGE_30번(mocker: MockerFixture):
+    # Arrange
+    mocker.patch("builtins.input", return_value=TestScriptType.ERASE_AND_AGING.value)
+    mock_receiver = mocker.Mock(spec=SSDController)
+    shell = SSDShell(receiver=mock_receiver)
+
+    mocker.patch.object(ScriptCommand, "_read_compare", return_value=True)
+    shell.run()
+    # act and assert
+    assert mock_receiver.write.call_count == 60
+    assert mock_receiver.erase.call_count == 30
+
+
+def test_ERASE_AND_WRITE_AGING_바로실패_WRITE_2번_ERASERANGE_1번(mocker: MockerFixture):
+    # Arrange
+    mocker.patch("builtins.input", return_value=TestScriptType.ERASE_AND_AGING.value)
+    mock_receiver = mocker.Mock(spec=SSDController)
+    shell = SSDShell(receiver=mock_receiver)
+
+    mocker.patch.object(ScriptCommand, "_read_compare", return_value=False)
+    shell.run()
+    # act and assert
+    assert mock_receiver.write.call_count == 2
+    assert mock_receiver.erase.call_count == 1
 
 @pytest.mark.parametrize("start, end", [(3, 5), (3, 20), (20, 3)])
 def test_ERASERANGE_명령어정합성_기본(
