@@ -1,19 +1,11 @@
 import re
 
 from src.command import (
-    WriteCommand,
-    ReadCommand,
-    FullReadCommand,
-    FullWriteCommand,
-    ExitCommand,
     ExitException,
-    HelpCommand,
     Command,
-    ScriptCommand,
 )
 from src.command_factory import CommandFactory
-
-INVALID_COMMAND = "INVALID COMMAND"
+from src.constants import INVALID_COMMAND
 
 
 class SSDShell:
@@ -24,12 +16,6 @@ class SSDShell:
     def is_running(self):
         return self._is_running
 
-    def _make_cmds_for_fullread(self):
-        list_cmds = []
-        for i in range(100):
-            list_cmds.append(f"ssd.py R {i}")
-        return list_cmds
-
     def run(self):
         command = self._parse_command()
         if not command or not command.is_valid():
@@ -38,7 +24,7 @@ class SSDShell:
 
         self._execute_command(command)
 
-    def _make_command(self) -> str or list[str]:
+    def _make_command(self) -> str:
         command = input("Shell> ")
         return command
 
