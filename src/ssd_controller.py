@@ -1,8 +1,6 @@
 import os
 import subprocess
 
-from src.constants import MAX_ERASE_SIZE
-
 
 class SSDController:
     def write(self, lba_address: str, hex_val: str):
@@ -47,24 +45,3 @@ class SSDController:
         )
         read_value = result.stdout
         print(f"[Erase] LBA {lba.zfill(2)}, size:{size}")
-
-    def eraserange(self, _lba_1: str, _lba_2: str):
-        lba_1, lba_2 = int(_lba_1), int(_lba_2)
-        lba = lba_1 if lba_1 < lba_2 else lba_2
-        end_lba = lba_1 if lba_1 > lba_2 else lba_2
-        total = end_lba - lba + 1
-        num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
-        for i in range(num_cmds):
-            if total < MAX_ERASE_SIZE:
-                size = total
-                total = 0
-            else:
-                size = MAX_ERASE_SIZE
-                total -= MAX_ERASE_SIZE
-            result = subprocess.run(
-                ["python", "ssd.py", "E", f"{lba}", f"{size}"],
-                capture_output=True,
-                text=True,
-            )
-            lba += MAX_ERASE_SIZE
-        print("[eraserange] Done")
