@@ -30,12 +30,10 @@ class Command(ABC):
         self.receiver = receiver
 
     @abstractmethod
-    def is_valid(self) -> bool:
-        ...
+    def is_valid(self) -> bool: ...
 
     @abstractmethod
-    def execute(self):
-        ...
+    def execute(self): ...
 
 
 class WriteCommand(Command):
@@ -71,7 +69,8 @@ class FullReadCommand(Command):
         return True
 
     def execute(self):
-        self.receiver.full_read()
+        for lba_address in range(100):
+            self.receiver.read(str(lba_address))
 
 
 class FullWriteCommand(Command):
@@ -82,7 +81,8 @@ class FullWriteCommand(Command):
 
     def execute(self):
         hex_val = self.args[1]
-        self.receiver.full_write(hex_val)
+        for lba_address in range(100):
+            self.receiver.write(str(lba_address), hex_val)
 
 
 class ExitCommand(Command):
