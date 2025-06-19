@@ -40,7 +40,6 @@ class WriteCommand(Command):
         lba_address, write_value = self.args[1:]
         return is_valid_lba_address(lba_address) and is_valid_8char_hex(write_value)
 
-    @logger.log_decorator("write execute")
     def execute(self):
         lba_address = self.args[1]
         hex_val = self.args[2]
@@ -92,7 +91,6 @@ class ExitCommand(Command):
 
 
 class EraseCommand(Command):
-
     def is_valid(self) -> bool:
         if len(self.args) != 3:
             return False
@@ -108,7 +106,6 @@ class EraseCommand(Command):
 
 
 class EraseRangeCommand(Command):
-
     def is_valid(self) -> bool:
         if len(self.args) != 3:
             return False
