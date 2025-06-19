@@ -24,14 +24,6 @@ class SSDController:
 
         return read_value
 
-    def full_read(self):
-        for lba_address in range(100):
-            self.read(str(lba_address))
-
-    def full_write(self, hex_val: str):
-        for lba_address in range(100):
-            self.write(str(lba_address), hex_val)
-
     def erase(self, lba: str, size: str):
         env = os.environ.copy()
         env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
@@ -43,3 +35,4 @@ class SSDController:
             env=env,
         )
         read_value = result.stdout
+
