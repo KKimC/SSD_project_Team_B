@@ -49,13 +49,6 @@ def test_read가_제대로_된_값을_리턴하는가(ssd_file_manager_mk, ssd_s
     assert ssd_sut.read(1) == "0x00000001"
 
 
-def test_write시_file_manager의_patch가_호출되는가(ssd_file_manager_mk, ssd_sut):
-    fake_nand = ["0x00000000" for _ in range(100)]
-    ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
-    ssd_sut.write(1, "0x00000001")
-    ssd_file_manager_mk.patch_ssd_nand.assert_called()
-
-
 def test_write시_정상적인경우_file_manager의_print_ssd_output함수는_한번도_호출되면_안된다(ssd_file_manager_mk, ssd_sut):
     fake_nand = ["0x00000000" for _ in range(100)]
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
@@ -168,3 +161,169 @@ def test_update_buffer_후_get_buffer_실행시_기대했던_값으로_명령어
     ssd_sut.update_buffer(expected_cmds)
     result = ssd_sut.get_buffer()
     assert result == expected_cmds
+
+def test_erase명령어_잘못된LBA주소_입력시_print_ssd_output함수를_호출하는가(ssd_file_manager_mk, ssd_sut):
+    ssd_sut.erase(WRONG_LBA_ADDRESS)
+
+    ssd_file_manager_mk.print_ssd_output.assert_called()
+
+def test_erase명령어_잘못된LBA주소_입력시_print_ssd_output에_ERROR를_전달하는가(ssd_file_manager_mk, ssd_sut):
+    ssd_sut.erase(WRONG_LBA_ADDRESS)
+
+    ssd_file_manager_mk.print_ssd_output.assert_called_once_with("ERROR")
+
+def test_erase명령어_삭제가능한_최대size를_넘으면_print_ssd_output에_ERROR를_전달하는가(ssd_file_manager_mk, ssd_sut):
+    INVALID_ERASE_SIZE = 14
+    ssd_sut.erase(VALID_LBA_ADDRESS, INVALID_ERASE_SIZE)
+
+    ssd_file_manager_mk.print_ssd_output.assert_called_once_with("ERROR")
+
+
+def test_erase명령어_valid하지않은_size의_경우_print_ssd_output에_ERROR를_전달하는가(ssd_file_manager_mk, ssd_sut):
+    INVALID_ERASE_SIZE = -1
+    ssd_sut.erase(VALID_LBA_ADDRESS, INVALID_ERASE_SIZE)
+
+    ssd_file_manager_mk.print_ssd_output.assert_called_once_with("ERROR")
+
+def test_erase명령어는_write명령어에_올바른LBA와_올바른_value0x00000000을_제대로_전달하는가(mocker, ssd_file_manager_mk, ssd_sut):
+    ERASE_SIZE = 3
+
+    fake_nand = ["0x00000000" for _ in range(100)]
+
+    ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
+
+    spy_write = mocker.spy(ssd_sut, "write")
+    ssd_sut.erase(VALID_LBA_ADDRESS, ERASE_SIZE)
+
+    expected = [mocker.call(VALID_LBA_ADDRESS, "0x00000000"),
+                mocker.call(VALID_LBA_ADDRESS+1, "0x00000000"),
+                mocker.call(VALID_LBA_ADDRESS+2, "0x00000000")]
+    spy_write.assert_has_calls(expected, any_order=False)
+    assert spy_write.call_count == 3
+
+
+def test_erase명령어는_올바르지않은_범위인경우_print_ssd_output에_ERROR를_전달하는가(ssd_file_manager_mk, ssd_sut):
+    START_LBA_ADDRESS_1 = 98
+    ERASE_SIZE_1 = 10
+
+    START_LBA_ADDRESS_2 = 99
+    ERASE_SIZE_2 = 1
+
+    fake_nand = ["0x00000000" for _ in range(100)]
+
+    ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
+
+    ssd_sut.erase(START_LBA_ADDRESS_1, ERASE_SIZE_1)
+    ssd_file_manager_mk.print_ssd_output.assert_called_once_with("ERROR")
+
+    ssd_sut.erase(START_LBA_ADDRESS_2, ERASE_SIZE_2)
+    ssd_file_manager_mk.print_ssd_output.assert_called_once_with("ERROR")
+
+
+def test_erase명령어는_size가0인경우_write함수를_호출하지_않는다(ssd_file_manager_mk, ssd_sut):
+    START_LBA_ADDRESS = 1
+    ERASE_SIZE = 0
+
+    ssd_sut.erase(START_LBA_ADDRESS, ERASE_SIZE)
+
+    ssd_file_manager_mk.print_ssd_output.assert_not_called()
+
+
+def test_erase명령어는_size가0인경우_print_ssd_output_함수를_호출하지_않는다(ssd_file_manager_mk, ssd_sut):
+    START_LBA_ADDRESS = 1
+    ERASE_SIZE = 0
+
+    ssd_sut.erase(START_LBA_ADDRESS, ERASE_SIZE)
+
+    ssd_file_manager_mk.print_ssd_output.assert_not_called()
+
+
+def test_flush는_실행되고나면_update_buffer함수에_empty_다섯개를_리스트로_넘겨줘야한다(mocker, ssd_file_manager_mk, ssd_sut):
+    dummy_buffer = ["1_W_20_ABC", "2_E_10_1", "3_empty", "4_empty", "5_empty"]
+    mocker.patch.object(ssd_sut, "get_buffer", return_value=dummy_buffer)
+    ssd_file_manager_mk.read_ssd_nand.return_value = ["0x00000000"] * 100
+
+    mock_update = mocker.patch.object(ssd_sut, "update_buffer")
+
+    ssd_sut.flush()
+
+    mock_update.assert_called_once_with(["1_empty", "2_empty", "3_empty", "4_empty", "5_empty"])
+
+
+def test_flush는_실행되면_get_buffer함수를_호출해_버퍼에_담긴_파일_리스트를_받아온다(mocker, ssd_file_manager_mk, ssd_sut):
+    mock_get = mocker.patch.object(ssd_sut, "get_buffer", return_value=[])
+    ssd_file_manager_mk.read_ssd_nand.return_value = ["0x00000000"] * 100
+
+    ssd_sut.flush()
+
+    mock_get.assert_called_once()
+
+
+def test_flush는_리스트_순서대로_함수를_수행해야한다(mocker, ssd_file_manager_mk, ssd_sut):
+    buffer_list = [
+        "1_W_20_ABC",  # 첫 번째는 write
+        "2_E_10_1",    # 두 번째는 erase
+        "3_empty",
+        "4_empty",
+        "5_empty"
+    ]
+    mocker.patch.object(ssd_sut, "get_buffer", return_value=buffer_list)
+
+    fake_nand = ["0x00000000"] * 100
+    ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
+
+    calls = []
+    mocker.patch.object(ssd_sut, "flush_write",
+                        lambda addr, val: calls.append(("W", addr, val)))
+    mocker.patch.object(ssd_sut, "flush_erase",
+                        lambda addr, cnt: calls.append(("E", addr, cnt)))
+
+    ssd_sut.flush()
+
+    assert calls == [
+        ("W", 20, "ABC"),
+        ("E", 10, 1),
+    ]
+
+
+def test_flush는_명령어가_W인경우_flush_write함수에_올바른_인자를_전달한다(mocker, ssd_file_manager_mk, ssd_sut):
+    buffer_list = ["1_W_20_ABC", "2_empty", "3_empty", "4_empty", "5_empty"]
+    mocker.patch.object(ssd_sut, "get_buffer", return_value=buffer_list)
+
+    fake_nand = ["0x00000000" for _ in range(100)]
+    ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
+
+    spy_flush_write = mocker.spy(ssd_sut, "flush_write")
+    ssd_sut.flush()
+
+    spy_flush_write.assert_called_once_with(20, "ABC")
+
+
+def test_flush는_명령어가_E인경우_flush_erase함수에_올바른_인자를_전달한다(mocker, ssd_file_manager_mk, ssd_sut):
+    buffer_list = ["1_W_20_ABC", "2_E_10_1", "3_empty", "4_empty", "5_empty"]
+    mocker.patch.object(ssd_sut, "get_buffer", return_value=buffer_list)
+
+    fake_nand = ["0x00000000"] * 100
+    ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
+
+    spy_flush_erase = mocker.spy(ssd_sut, "flush_erase")
+
+    ssd_sut.flush()
+
+    spy_flush_erase.assert_called_once_with(10, 1)
+
+
+def test_flush_에_들어오는_bufferlist_안이_전부_emtpy_인경우_아무_작업을_수행하지_않는다(mocker, ssd_file_manager_mk, ssd_sut):
+    buffer_list = ["1_empty", "2_empty", "3_empty", "4_empty", "5_empty"]
+    mocker.patch.object(ssd_sut, "get_buffer", return_value=buffer_list)
+
+    fake_nand = ["0x00000000"] * 100
+    ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
+
+    spy_flush_write = mocker.spy(ssd_sut, "flush_write")
+    spy_flush_erase = mocker.spy(ssd_sut, "flush_erase")
+
+    ssd_sut.flush()
+
+    spy_flush_write.assert_not_called()
+    spy_flush_erase.assert_not_called()
