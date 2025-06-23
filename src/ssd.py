@@ -22,7 +22,6 @@ class Optimizer:
         result = self.process_commands_in_order(buffer)
         return result[address] # 만약에 fast_read값이 없으면 '' return
 
-
     def process_commands_in_order(self, commands):
         buffer_memory = ['' for _ in range(100)]
         def get_prefix(_cmd):
