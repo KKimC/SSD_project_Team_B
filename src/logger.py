@@ -52,5 +52,5 @@ class Logger:
         timestamp = datetime.now().strftime("[%y.%m.%d %H:%M]")
         left = f"{timestamp} {func_name}"
         aligned = f"{left:<51}: {message}"  # 좌측 정렬, 총 51칸 맞춤
-        print(aligned)
+        #print(aligned) 파일에만 기록하도록 변경
         self._write_to_file(aligned)
