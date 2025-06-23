@@ -30,15 +30,6 @@ class CommandFactory:
             return HelpCommand
         if command_str == "flush":
             return FlushCommand
-        if (
-            (
-                command_str.startswith("1_")
-                and command_str in "1_FullWriteAndReadCompare"
-            )
-            or (command_str.startswith("2_") and command_str in "2_PartialLBAWrite")
-            or (command_str.startswith("3_") and command_str in "3_WriteReadAging")
-        ):
-
         if command_str == "erase":
             return EraseCommand
         if command_str == "erase_range":
