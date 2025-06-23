@@ -1,78 +1,76 @@
-import re
+import os.path
+import sys
 
-from src.command import (
-    WriteCommand,
-    ReadCommand,
-    FullReadCommand,
-    FullWriteCommand,
-    ExitCommand,
-    ExitException,
-    HelpCommand,
-    Command,
-    ScriptCommand,
-)
+from logger import Logger
 
-INVALID_COMMAND = "INVALID COMMAND"
+from command import Command
+from command_factory import CommandFactory
+from constants import INVALID_COMMAND
+from ssd_controller import SSDController
+
+from custom_exception import ExitException
+
+logger = Logger()
 
 
 class SSDShell:
-    COMMAND_MAP = {
-        "read": ReadCommand,
-        "write": WriteCommand,
-        "fullread": FullReadCommand,
-        "fullwrite": FullWriteCommand,
-        "exit": ExitCommand,
-        "help": HelpCommand,
-    }
-
-    def __init__(self):
-        self.validator = {}
+    def __init__(self, receiver=None):
         self._is_running = True
+        self._receiver = receiver or SSDController()
 
     @property
     def is_running(self):
         return self._is_running
 
-    def _make_cmds_for_fullread(self):
-        list_cmds = []
-        for i in range(100):
-            list_cmds.append(f"ssd.py R {i}")
-        return list_cmds
-
     def run(self):
-        command = self._parse_command()
+        input_command_str, command = self._parse_command()
         if not command or not command.is_valid():
-            print(INVALID_COMMAND)
+            if input_command_str.strip() == "":
+                return
+            logger.print("Shell.run()", f"INVALID COMMAND입니다.")
             return
 
         self._execute_command(command)
 
-    def _make_command(self) -> str or list[str]:
+    def _make_command(self) -> str:
         command = input("Shell> ")
         return command
 
     def _parse_command(self):
         command_str = self._make_command()
         command_list = command_str.split()
-
         if not command_list:
-            return None
+            return command_str, None
 
         command_type = command_list[0]
-        command_class = self.COMMAND_MAP.get(command_type)
+        command_class = CommandFactory.create(command_type)
         if not command_class:
-            if command_type in [
-                "1_",
-                "1_FullWriteAndReadCompare",
-                "2_",
-                "2_PartialLBAWrite",
-                "3_",
-                "3_WriteReadAging",
-            ]:
-                return ScriptCommand(args=command_list)
-            return None
+            return command_str, None
 
-        return command_class(args=command_list)
+        return command_str, command_class(args=command_list, receiver=self._receiver)
+
+    def _execute_command(self, command: Command):
+        try:
+            command.execute()
+        except ExitException:
+            self._is_running = False
+
+class SSDRunner:
+    def __init__(self, receiver=None):
+        self._receiver = receiver or SSDController()
+
+    def run(self, shell_script):
+        with open(shell_script, "r") as f:
+            contents = f.read()
+            test_script_commands = contents.splitlines()
+
+        for command_type in test_script_commands:
+            command_class = CommandFactory.create(command_type)
+            command = command_class(args=[command_type], receiver=self._receiver)
+            if not command or not command.is_valid():
+                print(INVALID_COMMAND)
+                return
+            self._execute_command(command)
 
     def _execute_command(self, command: Command):
         try:
@@ -82,6 +80,11 @@ class SSDShell:
 
 
 if __name__ == "__main__":
-    shell = SSDShell()
-    while shell.is_running:
-        shell.run()
+    args = sys.argv
+    if len(args) == 2 and os.path.basename(args[1]) == "shell_scripts.txt":
+        runner = SSDRunner()
+        runner.run(args[1])
+    else:
+        shell = SSDShell()
+        while shell.is_running:
+            shell.run()
