@@ -586,6 +586,21 @@ def test_optimization_한번에_erase가능한_범위안에_write_된경우_comm
     result_length = len([x for x in result_buffer if 'empty' not in x])
     assert optimized_length <= result_length
 
+def test_optimization_write된값이_모두_erase_된경우_nand(mocker, ssd_file_manager_mk, ssd_sut):
+    test_buffer = ['1_W_0_0x12345678', '2_W_1_0x12345678', '3_W_2_0x12345678', '4_E_0_3', '5_empty']
+    result_buffer = ['1_E_0_3', '2_empty', '3_empty', '4_empty', '5_empty']
+    # optimized_buffer = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
+    optimized_buffer = ssd_sut.optimization(test_buffer)
+    ssd_checker = SSDChecker()
+    assert ssd_checker.check_optimization(optimized_buffer, result_buffer) == True
+
+def test_optimization_write된값이_모두_erase_된경우_command(mocker, ssd_file_manager_mk, ssd_sut):
+    test_buffer = ['1_W_0_0x12345678', '2_W_1_0x12345678', '3_W_2_0x12345678', '4_E_0_3', '5_empty']
+    result_buffer = ['1_E_0_3', '2_empty', '3_empty', '4_empty', '5_empty']
+    optimized_length = len([x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x])
+    result_length = len([x for x in result_buffer if 'empty' not in x])
+    assert optimized_length <= result_length
+
 
 @pytest.mark.parametrize(
     "test_buffer,result_buffer",
@@ -658,7 +673,7 @@ def test_optimization_한번에_erase가능한_범위안에_write_된경우_comm
         # 11) merge forbidden by size, drop overlapping write
         (
             ['1_E_0_6', '2_E_6_6', '3_W_8_0x12345678', '4_empty', '5_empty'],
-            ['1_E_0_7', '2_E_9_3', '3_W_8_0x12345678', '4_empty', '5_empty']
+            ['1_E_0_8', '2_E_9_3', '3_W_8_0x12345678', '4_empty', '5_empty']
         ),
         # 12) nested erases merge into the larger one
         (
