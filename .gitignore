@@ -1,6 +1,7 @@
 /venv
 /.idea
 /tests/buffer/
+/buffer
 /src/__pycache__/
 /tests/__pycache__/
 /logs

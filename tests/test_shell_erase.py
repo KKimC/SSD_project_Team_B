@@ -4,7 +4,7 @@ import sys
 import pytest
 from pytest_mock import MockerFixture
 
-from src.constants import INVALID_COMMAND, MAX_ERASE_SIZE, TestScriptType
+from src.constants import INVALID_COMMAND, MAX_ERASE_SIZE, ScriptType
 from src.ssd_controller import SSDController
 from src.ssd_shell import SSDShell
 from src.utils.helpers import adjust_lba_and_count, normalize_lba_range
@@ -137,7 +137,7 @@ def test_ERASERANGE_인자개수는올바르지만_LBA주소가유효하지않�
 
 def test_ERASE_AND_WRITE_AGING_정상_WRITE_60번_ERASERANGE_30번(mocker: MockerFixture):
     # Arrange
-    mocker.patch("builtins.input", return_value=TestScriptType.ERASE_AND_AGING.value)
+    mocker.patch("builtins.input", return_value=ScriptType.ERASE_AND_AGING.value)
     mock_receiver = mocker.Mock(spec=SSDController)
     shell = SSDShell(receiver=mock_receiver)
 
@@ -151,7 +151,7 @@ def test_ERASE_AND_WRITE_AGING_정상_WRITE_60번_ERASERANGE_30번(mocker: Mocke
 
 def test_ERASE_AND_WRITE_AGING_바로실패_WRITE_2번_ERASERANGE_1번(mocker: MockerFixture):
     # Arrange
-    mocker.patch("builtins.input", return_value=TestScriptType.ERASE_AND_AGING.value)
+    mocker.patch("builtins.input", return_value=ScriptType.ERASE_AND_AGING.value)
     mock_receiver = mocker.Mock(spec=SSDController)
     shell = SSDShell(receiver=mock_receiver)
 
