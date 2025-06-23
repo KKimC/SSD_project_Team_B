@@ -6,19 +6,12 @@ from ssd_file_manager import SSDFileManager
 from typing import List
 
 class Optimizer:
-    def __init__(self, ssd):
-        self.ssd = ssd
-
     def optimization(self, buffer=None):
-        if buffer is None:
-            buffer = self.ssd.get_buffer()
         result = self.process_commands_in_order(buffer)
         result_cmd = self.buffer_to_commands(result)
-        self.ssd.update_buffer(result_cmd)
         return result_cmd
 
-    def fast_read(self, address):
-        buffer = self.ssd.get_buffer()
+    def fast_read(self, buffer, address):
         result = self.process_commands_in_order(buffer)
         return result[address] # 만약에 fast_read값이 없으면 '' return
 
@@ -113,7 +106,7 @@ class SSD:
     def __init__(self):
         self.select_file_manager(SSDFileManager())
         self.flush_handler = Flush(self.ssd_file_manager)
-        self.optimizer = Optimizer(self)
+        self.optimizer = Optimizer()
 
     def select_file_manager(self, file_manager):
         self.ssd_file_manager = file_manager
@@ -130,7 +123,8 @@ class SSD:
             return "ERROR"
 
         # optimazing
-        fast_read_value = self.optimizer.fast_read(address)
+        buffer = self.get_buffer()
+        fast_read_value = self.optimizer.fast_read(buffer, address)
         if fast_read_value != '':
             value = fast_read_value
         else:
@@ -150,7 +144,7 @@ class SSD:
         if len(buffer_list) == 5:
             self.flush()
         else:
-            self.optimizer.optimization()
+            self.optimization()
         self.insert_command(self.get_buffer(), f'W_{address}_{value}')
 
         return value
@@ -196,7 +190,7 @@ class SSD:
         if len(buffer_list) == 5:
             self.flush()
         else:
-            self.optimizer.optimization()
+            self.optimization()
         self.insert_command(self.get_buffer(), f'E_{address}_{size}')
 
         return "OK"
@@ -215,9 +209,12 @@ class SSD:
                 break
         self.update_buffer(command_list)
 
-    # test를 위한 임시함수
-    def optimization(self, test_buffer):
-        return self.optimizer.optimization(test_buffer)
+    def optimization(self, buffer=None):
+        if buffer is None:
+            buffer = self.get_buffer()
+        result_cmd = self.optimizer.optimization(buffer)
+        self.update_buffer(result_cmd)
+        return result_cmd
 
 
 def main():
