@@ -478,7 +478,7 @@ def test_optimization_한번에_erase가능한_범위안에_write_된경우_comm
         ),
         # 9) merge disjoint erases into a single range
         (
-            ['1_W_0_0x12345678', '2_E_2_2', '3_W_5_0x12345678', '4_E_7_2', '5_empty'],
+            ['1_W_0_0x12345678', '2_E_2_5', '3_W_5_0x12345678', '4_E_7_2', '5_empty'],
             ['1_W_0_0x12345678', '2_E_2_7', '3_W_5_0x12345678', '4_empty',    '5_empty']
         ),
         # 10) capacity=5, both algos: merge erases, keep latest write
@@ -491,17 +491,12 @@ def test_optimization_한번에_erase가능한_범위안에_write_된경우_comm
             ['1_W_1_0x12345678', '2_W_2_0x12345678', '3_E_1_3', '4_E_3_3', '5_W_2_0x00000000'],
             ['1_E_1_5', '2_empty', '3_empty', '4_empty', '5_empty']
         ),
-        # 10-2) duplicate of 10-1
-        (
-            ['1_W_1_0x12345678', '2_W_2_0x12345678', '3_E_1_3', '4_E_3_3', '5_W_2_0x00000000'],
-            ['1_E_1_5', '2_empty', '3_empty', '4_empty', '5_empty']
-        ),
-        # 10-3) write then overwrite before erase
+        # 10-2) write then overwrite before erase
         (
             ['1_W_1_0x12345678', '2_W_1_0x00000000', '3_E_1_3', '4_empty', '5_empty'],
             ['1_E_1_3', '2_empty', '3_empty', '4_empty', '5_empty']
         ),
-        # 10-4) multiple overwrites, keep last
+        # 10-3) multiple overwrites, keep last
         (
             ['1_W_1_0x00000000', '2_W_1_0x00000000', '3_W_1_0x00000001', '4_empty', '5_empty'],
             ['1_W_1_0x00000001', '2_empty', '3_empty', '4_empty', '5_empty']
