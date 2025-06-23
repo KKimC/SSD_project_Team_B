@@ -155,7 +155,8 @@ def test_ERASE_AND_WRITE_AGING_정상_WRITE_60번_ERASERANGE_30번(mocker: Mocke
     mock_receiver = mocker.Mock(spec=SSDController)
     shell = SSDShell(receiver=mock_receiver)
 
-    mocker.patch.object(ScriptCommand, "_read_compare", return_value=True)
+    mock_read_compare = mocker.patch("src.command_script._read_compare")
+    mock_read_compare.return_value = True
     shell.run()
     # act and assert
     assert mock_receiver.write.call_count == 60
@@ -168,7 +169,8 @@ def test_ERASE_AND_WRITE_AGING_바로실패_WRITE_2번_ERASERANGE_1번(mocker: M
     mock_receiver = mocker.Mock(spec=SSDController)
     shell = SSDShell(receiver=mock_receiver)
 
-    mocker.patch.object(ScriptCommand, "_read_compare", return_value=False)
+    mock_read_compare = mocker.patch("src.command_script._read_compare")
+    mock_read_compare.return_value = False
     shell.run()
     # act and assert
     assert mock_receiver.write.call_count == 2
