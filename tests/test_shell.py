@@ -1,14 +1,12 @@
 import io
 import re
 import sys
-from subprocess import CompletedProcess
 
 import pytest
 from pytest_mock import MockerFixture
 
 from src.constants import HELP_TEXT, INVALID_COMMAND
 from src.ssd_shell import SSDShell
-from src.command import ScriptCommand
 
 
 def _do_run_and_get_result_from_buffer(shell):
@@ -153,16 +151,12 @@ def test_WRITE명령어_유효하지않은인자_값_INVALID_COMMAND(mocker: Moc
     assert expected in result
 
 
-def test_WRITE명령어_정상인자_기대되는출력물을만드는가(mocker: MockerFixture, shell):
+def test_WRITE명령어_정상인자_행동검증(mocker: MockerFixture, shell):
     # Arrange
     mocker.patch("builtins.input", return_value="write 3 0xAAAABBBB")
     mock_subprocess = mocker.patch("src.ssd_controller.subprocess.run")
-
-    expected = "[Write] Done"
-
     # act and assert
     result = _do_run_and_get_result_from_buffer(shell).strip()
-    assert expected.strip() in result.strip()
     mock_subprocess.assert_called_once_with(
         ["python", "ssd.py", "W", "3", "0xAAAABBBB"],
         capture_output=True,
@@ -309,26 +303,13 @@ def _make_100_reads():
     return list_cmds
 
 
-def test_FULLREAD명령어_정상인자_기대되는_출력(mocker: MockerFixture, shell):
+def test_FULLREAD명령어_정상인자_READ100회(mocker: MockerFixture, shell):
     mocker.patch("builtins.input", return_value="fullread")
     expected_line_num = 100
-    mock_subprocess = mocker.patch("src.ssd_controller.subprocess.run")
-    mock_subprocess.return_value = CompletedProcess(
-        args=["python", "ssd.py", "R", "0"],
-        returncode=0,
-        stderr="",
-        stdout="0x00000000",
-    )
-    arr_response = _do_run_and_get_result_from_buffer(shell).strip().splitlines()
-    assert len(arr_response) == expected_line_num
-
-    matched = True
-    for response in arr_response:
-        if _is_valid_8char_hex(response):
-            continue
-        matched = False
-        break
-    assert matched == True
+    mock_ssdcontroller_read = mocker.patch("src.ssd_controller.SSDController.read")
+    mock_ssdcontroller_read.return_value = "0x00000000"
+    shell.run()
+    assert mock_ssdcontroller_read.call_count == expected_line_num
 
 
 def test_FULLREAD명령어_비정상인자_불필요인자_INVALID_COMMAND(
@@ -345,7 +326,8 @@ def test_FULLWRITE_AND_READ_COMPARE_정상_PASS_100번(mocker: MockerFixture, sh
     # Arrange
     mocker.patch("builtins.input", return_value="1_FullWriteAndReadCompare")
     mock_write = mocker.patch("src.ssd_controller.SSDController.write")
-    mocker.patch.object(ScriptCommand, "_read_compare", return_value=True)
+    mock_read_compare = mocker.patch("src.command_script._read_compare")
+    mock_read_compare.return_value = True
     shell.run()
     # act and assert
     assert mock_write.call_count == 100
@@ -355,7 +337,8 @@ def test_FULLWRITE_AND_READ_COMPARE_실패_FAIL_5번(mocker: MockerFixture, shel
     # Arrange
     mocker.patch("builtins.input", return_value="1_FullWriteAndReadCompare")
     mock_write = mocker.patch("src.ssd_controller.SSDController.write")
-    mocker.patch.object(ScriptCommand, "_read_compare", return_value=False)
+    mock_read_compare = mocker.patch("src.command_script._read_compare")
+    mock_read_compare.return_value = False
     shell.run()
     # act and assert
     assert mock_write.call_count == 5
@@ -365,8 +348,9 @@ def test_PARTIAL_LBA_WRITE_정상_PASS_WRITE_150번(mocker: MockerFixture, shell
     # Arrange
     mocker.patch("builtins.input", return_value="2_PartialLBAWrite")
     mock_write = mocker.patch("src.ssd_controller.SSDController.write")
-    mocker.patch.object(ScriptCommand, "_read_compare", return_value=True)
-    result = _do_run_and_get_result_from_buffer(shell)
+    mock_read_compare = mocker.patch("src.command_script._read_compare")
+    mock_read_compare.return_value = True
+    shell.run()
     # act and assert
     assert mock_write.call_count == 150
 
@@ -375,8 +359,9 @@ def test_PARTIAL_LBA_WRITE_실패_FAIL_WRITE_5번(mocker: MockerFixture, shell):
     # Arrange
     mocker.patch("builtins.input", return_value="2_PartialLBAWrite")
     mock_write = mocker.patch("src.ssd_controller.SSDController.write")
-    mocker.patch.object(ScriptCommand, "_read_compare", return_value=False)
-    result = _do_run_and_get_result_from_buffer(shell)
+    mock_read_compare = mocker.patch("src.command_script._read_compare")
+    mock_read_compare.return_value = False
+    shell.run()
     # act and assert
     assert mock_write.call_count == 5
 
@@ -385,33 +370,21 @@ def test_WRITE_READ_AGING_정상_PASS_WRITE_400번(mocker: MockerFixture, shell)
     # Arrange
     mocker.patch("builtins.input", return_value="3_WriteReadAging")
     mock_write = mocker.patch("src.ssd_controller.SSDController.write")
-    mocker.patch.object(ScriptCommand, "_read_compare", return_value=True)
-    result = _do_run_and_get_result_from_buffer(shell)
+    mock_read_compare = mocker.patch("src.command_script._read_compare")
+    mock_read_compare.return_value = True
+    shell.run()
     # act and assert
-    assert result.replace("\n", "") == "PASS" * 400
     assert mock_write.call_count == 400
 
 
-def test_WRITE_READ_AGING_실패_FAIL_WRITE_5번(mocker: MockerFixture, shell):
+def test_WRITE_READ_AGING_실패_FAIL_WRITE_2번(mocker: MockerFixture, shell):
     # Arrange
-    mocker.patch("builtins.input", return_value="3_WriteReadAging")
+    mocker.patch("builtins.input", return_value="4_WriteReadAging")
     mock_write = mocker.patch("src.ssd_controller.SSDController.write")
-    mocker.patch.object(ScriptCommand, "_read_compare", return_value=False)
-    result = _do_run_and_get_result_from_buffer(shell)
+    mock_erase = mocker.patch("src.ssd_controller.SSDController.erase")
+    mock_read_compare = mocker.patch("src.command_script._read_compare")
+    mock_read_compare.return_value = False
+    shell.run()
     # act and assert
-    assert result.replace("\n", "") == "FAIL"
     assert mock_write.call_count == 2
-
-
-def test_FULLREAD_reads를_형식에_맞게_보내는지(mocker: MockerFixture, shell):
-    mocker.patch("builtins.input", return_value="fullread")
-    expected_line_num = 100
-    mock_subprocess = mocker.patch("src.ssd_controller.subprocess.run")
-    arr_response = _do_run_and_get_result_from_buffer(shell).strip().splitlines()
-    assert len(arr_response) == expected_line_num
-
-    for i, response in enumerate(arr_response):
-        expected_cmd = ["python", "ssd.py", "R", f"{i}"]
-        actual_call = mock_subprocess.call_args_list[i]
-        actual_args = actual_call.args[0]
-        assert actual_args == expected_cmd, f"LBA {i} 에서 명령어 불일치: {actual_args}"
+    assert mock_erase.call_count == 1

@@ -11,8 +11,8 @@ from src.utils.helpers import generate_random_hex
 logger = Logger()
 
 
-def _read_compare(receiver: SSDController, lba: int, write_value: str):
-    return "PASS" if receiver.read(str(lba)).strip() == write_value.strip() else "FAIL"
+def _read_compare(receiver: SSDController, lba: int, write_value: str) -> bool:
+    return receiver.read(str(lba)).strip() == write_value.strip()
 
 
 class ScriptCommandType(ABC):
@@ -38,7 +38,7 @@ class FullWriteAndReadCommand(ScriptCommandType):
 
             lba_address = i * 5
             for value in write_value_list:
-                if _read_compare(self.receiver, lba_address, value) == "FAIL":
+                if _read_compare(self.receiver, lba_address, value) == False:
                     raise ExitException
                 lba_address += 1
         logger.print(
@@ -57,10 +57,7 @@ class PartialLbaWriteCommand(ScriptCommandType):
             for write_lba_address in lba_address_list:
                 self.receiver.write(str(write_lba_address), write_value)
             for read_lba_address in range(5):
-                if (
-                    _read_compare(self.receiver, read_lba_address, write_value)
-                    == "FAIL"
-                ):
+                if _read_compare(self.receiver, read_lba_address, write_value) == False:
                     raise ExitException
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
@@ -80,7 +77,7 @@ class WriteReadAgingCommand(ScriptCommandType):
             for i, lba_address in enumerate(lba_address_list):
                 if (
                     _read_compare(self.receiver, lba_address, write_value_list[i])
-                    == "FAIL"
+                    == False
                 ):
                     raise ExitException
         logger.print(
@@ -101,7 +98,7 @@ class EraseAndAgingCommand(ScriptCommandType):
             self.receiver.write(str(lba_address_list[0]), write_value)
             self.receiver.erase(str(lba_address_list[0]), str(3))
             for lba_address in lba_address_list:
-                if _read_compare(self.receiver, lba_address, EMPTY_VALUE) == "FAIL":
+                if _read_compare(self.receiver, lba_address, EMPTY_VALUE) == False:
                     raise ExitException
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
