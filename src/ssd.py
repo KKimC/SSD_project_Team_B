@@ -5,9 +5,46 @@ import os
 from ssd_file_manager import SSDFileManager
 from typing import List
 
+
+class Flush:
+    def __init__(self, file_manager: SSDFileManager):
+        self.ssd_file_manager = file_manager
+
+    def flush_write(self, address=-1, value="ERROR"):
+        nand = self.ssd_file_manager.read_ssd_nand()
+        nand[address] = value
+        self.ssd_file_manager.patch_ssd_nand(nand)
+        return value
+
+    def flush_erase(self, address=-1, size=-1):
+        for lba in range(address, address + size):
+            self.flush_write(lba, "0x00000000")
+        return "OK"
+
+    def flush(self, buffer_list: List[str]) -> List[str]:
+        for entry in buffer_list:
+            parts = entry.split('_')
+            if len(parts) < 2: # empty case
+                continue
+
+            cmd = parts[1]
+            if cmd == "W" and len(parts) == 4:
+                address = int(parts[2])
+                value = parts[3]
+                self.flush_write(address, value)
+
+            elif cmd == "E" and len(parts) == 4:
+                address = int(parts[2])
+                size = int(parts[3])
+                self.flush_erase(address, size)
+
+        return [f"{i+1}_empty" for i in range(5)]
+
+
 class SSD:
     def __init__(self):
         self.select_file_manager(SSDFileManager())
+        self.flush_handler = Flush(self.ssd_file_manager)
 
     def select_file_manager(self, file_manager):
         self.ssd_file_manager = file_manager
@@ -101,56 +138,10 @@ class SSD:
 
         return "OK"
 
-    def flush_write(self, address=-1, value="ERROR"):
-        if not self._is_valid_lba(address) or not self._is_valid_value(value):
-            self.ssd_file_manager.print_ssd_output("ERROR")
-            return "ERROR"
-
-        nand = self.ssd_file_manager.read_ssd_nand()
-        nand[address] = value
-        self.ssd_file_manager.patch_ssd_nand(nand)
-        return value
-
-    def flush_erase(self, address=-1, size=-1):
-        MAX_ERASE_SIZE = 10
-        if not self._is_valid_lba(address):
-            self.ssd_file_manager.print_ssd_output("ERROR")
-            return "ERROR"
-
-        if not isinstance(size, int) or not (0 <= size <= MAX_ERASE_SIZE):
-            self.ssd_file_manager.print_ssd_output("ERROR")
-            return "ERROR"
-
-        LAST_LBA = address + size - 1
-        if LAST_LBA > 99:
-            self.ssd_file_manager.print_ssd_output("ERROR")
-            return "ERROR"
-
-        for lba in range(address, address + size):
-            self.flush_write(lba, "0x00000000")
-        return "OK"
-
     def flush(self):
         buffer_list = self.get_buffer()
-
-        for entry in buffer_list:
-            parts = entry.split('_')
-            if len(parts) < 2: # empty case
-                continue
-
-            cmd = parts[1]
-            if cmd == "W" and len(parts) == 4:
-                address = int(parts[2])
-                value = parts[3]
-                self.flush_write(address, value)
-
-            elif cmd == "E" and len(parts) == 4:
-                address = int(parts[2])
-                size = int(parts[3])
-                self.flush_erase(address, size)
-
-        updated_buffer_list = ["1_empty", "2_empty", "3_empty", "4_empty", "5_empty"]
-        self.update_buffer(updated_buffer_list)
+        initialized_buffer = self.flush_handler.flush(buffer_list)
+        self.update_buffer(initialized_buffer)
 
     def fast_read(self, address):
         buffer = self.get_buffer()
