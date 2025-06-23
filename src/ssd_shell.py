@@ -66,19 +66,32 @@ class SSDRunner:
             contents = f.read()
             test_script_commands = contents.splitlines()
 
-        for command_type in test_script_commands:
-            command_class = CommandFactory.create(command_type)
-            command = command_class(args=[command_type], receiver=self._receiver)
+        for command_str in test_script_commands:
+            input_command_str, command = self._parse_command(command_str)
             if not command or not command.is_valid():
                 print(INVALID_COMMAND)
+                logger.print("Runner.run()", f"INVALID COMMAND입니다.")
                 return
+
             self._execute_command(command)
 
     def _execute_command(self, command: Command):
         try:
             command.execute()
         except ExitException:
-            self._is_running = False
+            exit()
+
+    def _parse_command(self,command_str):
+        command_list = command_str.split()
+        if not command_list:
+            return command_str, None
+
+        command_type = command_list[0]
+        command_class = CommandFactory.create(command_type)
+        if not command_class:
+            return command_str, None
+
+        return command_str, command_class(args=command_list, receiver=self._receiver)
 
 
 if __name__ == "__main__":
