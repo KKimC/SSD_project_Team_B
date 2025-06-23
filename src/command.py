@@ -193,9 +193,6 @@ class ScriptCommand(Command):
     def execute(self):
         self.script_command_type.execute()
 
-    def _read_compare(self, lba_address: int, value: str) -> bool:
-        return self.receiver.read(str(lba_address)).strip() == value.strip()
-
 
 class HelpCommand(Command):
     def is_valid(self) -> bool:
