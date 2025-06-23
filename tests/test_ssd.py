@@ -24,6 +24,7 @@ def ssd_file_manager_mk(mocker):
 def ssd_sut(ssd_file_manager_mk):
     ssd_sut = SSD()
     ssd_sut.select_file_manager(ssd_file_manager_mk)
+    ssd_sut.update_buffer(['1_empty', '2_empty', '3_empty', '4_empty', '5_empty'])
     return ssd_sut
 
 class SSDChecker:
