@@ -1,21 +1,27 @@
-import os
-import re
-import random
-import subprocess
 from typing import List
 from abc import abstractmethod, ABC
+from logger import Logger
+import inspect
 
-from src.constants import HELP_TEXT
+from src.command_script import (
+    ScriptCommandType,
+    list_script_commands,
+    get_matched_script,
+)
+from src.constants import HELP_TEXT, MAX_ERASE_SIZE
+from src.custom_exception import ExitException
 from src.ssd_controller import SSDController
+from src.utils.helpers import (
+    adjust_lba_and_count,
+    normalize_lba_range,
+)
+from src.utils.validators import (
+    is_int,
+    is_valid_lba_address,
+    is_valid_8char_hex,
+)
 
-
-def generate_random_hex() -> str:
-    value = random.randint(0, 0xFFFFFFFF)  # 32비트 범위 (8자리)
-    return f"0x{value:08X}"  # 대문자, 0으로 패딩
-
-
-class ExitException(Exception):
-    pass
+logger = Logger()
 
 
 class Command(ABC):
@@ -29,28 +35,22 @@ class Command(ABC):
     @abstractmethod
     def execute(self): ...
 
-    def _is_valid_8char_hex(self, write_value_str: str) -> bool:
-        return bool(re.fullmatch(r"0x[0-9a-fA-F]{8}", write_value_str))
-
-    def _is_valid_lba(self, value: str) -> bool:
-        try:
-            num = int(value)
-            return 0 <= num <= 99
-        except ValueError:
-            return False
-
 
 class WriteCommand(Command):
     def is_valid(self) -> bool:
         if len(self.args) != 3:
             return False
         lba_address, write_value = self.args[1:]
-        return self._is_valid_lba(lba_address) and self._is_valid_8char_hex(write_value)
+        return is_valid_lba_address(lba_address) and is_valid_8char_hex(write_value)
 
     def execute(self):
         lba_address = self.args[1]
         hex_val = self.args[2]
         self.receiver.write(lba_address, hex_val)
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"LBA: {lba_address}, VALUE: {hex_val}",
+        )
 
 
 class ReadCommand(Command):
@@ -58,11 +58,15 @@ class ReadCommand(Command):
         if len(self.args) < 2:
             return False
 
-        return self._is_valid_lba(self.args[1])
+        return is_valid_lba_address(self.args[1])
 
     def execute(self):
         lba_address = self.args[1]
         read_value = self.receiver.read(lba_address)
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"LBA: {lba_address}, VALUE: {read_value.rstrip()}",
+        )
         return read_value
 
 
@@ -73,18 +77,28 @@ class FullReadCommand(Command):
         return True
 
     def execute(self):
-        self.receiver.full_read()
+        for lba_address in range(100):
+            self.receiver.read(str(lba_address))
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"FULLREAD",
+        )
 
 
 class FullWriteCommand(Command):
     def is_valid(self) -> bool:
         if len(self.args) != 2:
             return False
-        return self._is_valid_8char_hex(self.args[1])
+        return is_valid_8char_hex(self.args[1])
 
     def execute(self):
         hex_val = self.args[1]
-        self.receiver.full_write(hex_val)
+        for lba_address in range(100):
+            self.receiver.write(str(lba_address), hex_val)
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"FULLWRITE VALUE: {hex_val}",
+        )
 
 
 class ExitCommand(Command):
@@ -94,81 +108,93 @@ class ExitCommand(Command):
         return True
 
     def execute(self):
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"EXIT",
+        )
         raise ExitException
 
 
-class ScriptCommand(Command):
-    def __init__(self, args: List[str], receiver: SSDController):
-        super().__init__(args, receiver)
-        self._test_script_type = ""
+def erase_per_chunk(receiver, lba: int, total: int):
+    num_cmds = int((total + MAX_ERASE_SIZE - 1) / MAX_ERASE_SIZE)
+    for i in range(num_cmds):
+        if total < MAX_ERASE_SIZE:
+            size = total
+            total = 0
+        else:
+            size = MAX_ERASE_SIZE
+            total -= MAX_ERASE_SIZE
+        receiver.erase(str(lba), str(size))
+        lba += MAX_ERASE_SIZE
 
+
+class EraseCommand(Command):
     def is_valid(self) -> bool:
-        if len(self.args) != 1:
+        if len(self.args) != 3:
             return False
 
-        if self.args[0] in ["1_", "1_FullWriteAndReadCompare"]:
-            self._test_script_type = "1_FullWriteAndReadCompare"
-            return True
-        if self.args[0] in ["2_", "2_PartialLBAWrite"]:
-            self._test_script_type = "2_PartialLBAWrite"
-            return True
-        if self.args[0] in ["3_", "3_WriteReadAging"]:
-            self._test_script_type = "3_WriteReadAging"
+        lba_address, size = self.args[1:]
+        if not is_valid_lba_address(lba_address):
+            return False
+
+        return is_int(size)
+
+    def execute(self):
+        lba, size = int(self.args[1]), int(self.args[2])
+        adjusted_start_lba, total = adjust_lba_and_count(lba, size)
+        erase_per_chunk(self.receiver, adjusted_start_lba, total)
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"LBA: {lba}, SIZE: {size}",
+        )
+
+
+class EraseRangeCommand(Command):
+    def is_valid(self) -> bool:
+        if len(self.args) != 3:
+            return False
+
+        start_lba_address, end_lba_address = self.args[1:]
+        if is_valid_lba_address(start_lba_address) and is_valid_lba_address(
+            end_lba_address
+        ):
             return True
         return False
 
     def execute(self):
-        if self._test_script_type == "1_FullWriteAndReadCompare":
-            self._execute_script_1()
-        elif self._test_script_type == "2_PartialLBAWrite":
-            self._execute_script_2()
-        elif self._test_script_type == "3_WriteReadAging":
-            self._execute_script_3()
+        start_lba, end_lba = int(self.args[1]), int(self.args[2])
+        adjusted_start_lba, total = normalize_lba_range(start_lba, end_lba)
+        erase_per_chunk(self.receiver, adjusted_start_lba, total)
 
-    def _execute_script_1(self):
-        for i in range(20):
-            write_value_list = [generate_random_hex() for _ in range(5)]
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"START_LBA: {start_lba}, END_LBA: {end_lba}",
+        )
 
-            lba_address = i * 5
-            for value in write_value_list:
-                self.receiver.write(str(lba_address), value)
-                lba_address += 1
 
-            lba_address = i * 5
-            for value in write_value_list:
-                self._read_compare_and_check_pass_or_fail(lba_address, value)
-                lba_address += 1
+class ScriptCommand(Command):
+    @staticmethod
+    def is_script_name_matched(command_str: str) -> bool:
+        for script_command in list_script_commands:
+            if command_str.startswith(script_command.SCRIPT_TYPE):
+                return True
+        return False
 
-    def _execute_script_2(self):
-        for _ in range(30):
-            write_value = generate_random_hex()
-            lba_address_list = [4, 0, 3, 1, 2]
-            for write_lba_address in lba_address_list:
-                self.receiver.write(str(write_lba_address), write_value)
-            for read_lba_address in range(5):
-                self._read_compare_and_check_pass_or_fail(read_lba_address, write_value)
+    def __init__(self, args: List[str], receiver: SSDController):
+        super().__init__(args, receiver)
 
-    def _execute_script_3(self):
-        lba_address_list = [0, 99]
-        for _ in range(200):
-            write_value_list = [generate_random_hex()] * 2
-            for i, lba_address in enumerate(lba_address_list):
-                self.receiver.write(str(lba_address), write_value_list[i])
-            for i, lba_address in enumerate(lba_address_list):
-                self._read_compare_and_check_pass_or_fail(
-                    lba_address, write_value_list[i]
-                )
+        # inject strategy
+        script_class = get_matched_script(args[0])
+        self.script_command_type = script_class(self.args, self.receiver)
 
-    def _read_compare_and_check_pass_or_fail(self, read_lba_address, write_value):
-        if self._read_compare(read_lba_address, write_value):
-            print("PASS")
-        else:
-            print("FAIL")
-            raise ExitException
+    def is_valid(self) -> bool:
+        return True if len(self.args) == 1 else False
+
+    def execute(self):
+        self.script_command_type.execute()
 
     def _read_compare(self, lba_address: int, value: str) -> bool:
-        result = self.receiver.read(str(lba_address))
-        return result.strip() == value.strip()
+        return self.receiver.read(str(lba_address)).strip() == value.strip()
 
 
 class HelpCommand(Command):
@@ -179,6 +205,10 @@ class HelpCommand(Command):
 
     def execute(self):
         print(HELP_TEXT)
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"HELP",
+        )
         return
 
 

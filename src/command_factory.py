@@ -7,7 +7,10 @@ from src.command import (
     HelpCommand,
     ScriptCommand,
     FlushCommand,
+    EraseCommand,
+    EraseRangeCommand,
 )
+from src.utils.validators import is_right_script_name
 
 
 class CommandFactory:
@@ -36,5 +39,10 @@ class CommandFactory:
             or (command_str.startswith("3_") and command_str in "3_WriteReadAging")
         ):
 
+        if command_str == "erase":
+            return EraseCommand
+        if command_str == "erase_range":
+            return EraseRangeCommand
+        if ScriptCommand.is_script_name_matched(command_str):
             return ScriptCommand
         return None

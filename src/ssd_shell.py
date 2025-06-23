@@ -2,6 +2,11 @@ import os.path
 import re
 import sys
 
+from logger import Logger
+
+logger = Logger()
+
+
 from src.command import (
     ExitException,
     Command,
@@ -12,22 +17,20 @@ from src.ssd_controller import SSDController
 
 
 class SSDShell:
-    def __init__(self):
+    def __init__(self, receiver=None):
         self._is_running = True
-        self._receiver = SSDController()
+        self._receiver = receiver or SSDController()
 
     @property
     def is_running(self):
         return self._is_running
 
-    def _make_command(self) -> str:
-        command = input("Shell> ")
-        return command
-
     def run(self):
-        command = self._parse_command()
+        input_command_str, command = self._parse_command()
         if not command or not command.is_valid():
-            print(INVALID_COMMAND)
+            if input_command_str.strip() == "":
+                return
+            logger.print("Shell.run()", f"INVALID COMMAND입니다.")
             return
 
         self._execute_command(command)
@@ -45,18 +48,22 @@ class SSDShell:
                 return
             self._execute_command(command)
 
+    def _make_command(self) -> str:
+        command = input("Shell> ")
+        return command
+
     def _parse_command(self):
         command_str = self._make_command()
         command_list = command_str.split()
         if not command_list:
-            return None
+            return command_str, None
 
         command_type = command_list[0]
         command_class = CommandFactory.create(command_type)
         if not command_class:
-            return None
+            return command_str, None
 
-        return command_class(args=command_list, receiver=self._receiver)
+        return command_str, command_class(args=command_list, receiver=self._receiver)
 
     def _execute_command(self, command: Command):
         try:
