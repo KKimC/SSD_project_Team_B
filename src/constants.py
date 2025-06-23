@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class TestScriptType(Enum):
+class ScriptType(Enum):
     FULL_WRITE_AND_READ = "1_FullWriteAndReadCompare"
     PARTIAL_LBA_WRITE = "2_PartialLBAWrite"
     WRITE_READ_AGING = "3_WriteReadAging"
@@ -84,6 +84,3 @@ DESCRIPTION
         예시: 1_WriteReadAging
              1_
         """
-
-
-

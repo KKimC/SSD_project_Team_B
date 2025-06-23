@@ -1,6 +1,7 @@
 /venv
 /.idea
 /tests/buffer/
+/buffer
 /src/__pycache__/
 /tests/__pycache__/
 /logs
@@ -8,3 +9,6 @@
 /src/utils/__pycache__/
 /src/buffer/
 /outputs/
+/.coverage
+/htmlcov
+/.pytest_cache
