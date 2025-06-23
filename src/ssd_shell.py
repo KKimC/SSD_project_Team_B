@@ -28,7 +28,7 @@ class SSDShell:
             if input_command_str.strip() == "":
                 return
             print(INVALID_COMMAND)
-            logger.print("Shell.run()", f"INVALID COMMAND입니다.")
+            logger.print("Shell.run()", f"{INVALID_COMMAND}입니다.")
             return
 
         self._execute_command(command)
@@ -81,7 +81,7 @@ class SSDRunner:
         except ExitException:
             exit()
 
-    def _parse_command(self,command_str):
+    def _parse_command(self, command_str):
         command_list = command_str.split()
         if not command_list:
             return command_str, None
