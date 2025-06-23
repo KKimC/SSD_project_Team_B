@@ -73,7 +73,6 @@ def test_read가_output에_제대로_된_값을_전달하는가(ssd_file_manager
     fake_nand[1] = "0x00000001"
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
     ssd_sut.read(1)
-    ssd_file_manager_mk.read_ssd_nand.side_effect = ["0x00000001" for _ in range(100)]
     ssd_file_manager_mk.print_ssd_output.assert_called_with("0x00000001")
 
 
@@ -371,10 +370,17 @@ def test_buffer(mocker):
     src.ssd.main()
     ssd.flush()
 
-def test_optimization_ignore_1(mocker, ssd_file_manager_mk, ssd_sut):
+def test_optimization_ignore_compare_nand(mocker, ssd_file_manager_mk, ssd_sut):
     test_buffer = ['1_E_1_2', '2_E_4_1', '3_W_3_0xAAAAAAAA', '4_empty', '5_empty']
     result_buffer = ['1_E_1_4', '2_W_3_0xAAAAAAAA', '3_empty', '4_empty', '5_empty']
-    optimized_buffer = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
-
+    # optimized_buffer = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
+    optimized_buffer = ssd_sut.optimization(test_buffer)
     ssd_checker = SSDChecker()
     assert ssd_checker.check_optimization(optimized_buffer, result_buffer) == True
+
+def test_optimization_ignore_compare_command(mocker, ssd_file_manager_mk, ssd_sut):
+    test_buffer = ['1_E_1_2', '2_E_4_1', '3_W_3_0xAAAAAAAA', '4_empty', '5_empty']
+    result_buffer = ['1_E_1_4', '2_W_3_0xAAAAAAAA', '3_empty', '4_empty', '5_empty']
+    optimized_length = len([x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x])
+    result_length = len([x for x in result_buffer if 'empty' not in x])
+    assert optimized_length <= result_length

@@ -40,8 +40,7 @@ class SSD:
             return "ERROR"
 
         # optimizing
-        buffer_list = self.get_buffer()
-        print(buffer_list)
+        buffer_list = [x for x in self.get_buffer() if 'empty' not in x]
         if len(buffer_list) == 5:
             self.flush()
         else:
@@ -92,7 +91,8 @@ class SSD:
             return "ERROR"
 
         # optimizing
-        buffer_list = self.get_buffer()
+        buffer_list = [x for x in self.get_buffer() if 'empty' not in x]
+        print(self.get_buffer(), buffer_list)
         if len(buffer_list) == 5:
             self.flush()
         else:
@@ -204,7 +204,7 @@ class SSD:
         i = 0
         while i < size:
             val = buffer[i]
-            if (val != '0x00000000') or (val != ''):
+            if (val != '0x00000000') and (val != ''):
                 commands.append(f"{prefix}_W_{i}_{val}")
                 prefix += 1
                 i += 1
