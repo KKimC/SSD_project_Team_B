@@ -41,7 +41,7 @@ class Optimizer:
         size = len(buffer)
         while i < size:
             val = buffer[i]
-            if val != '':
+            if val == '0x00000000':
                 start = i
                 count = 0
                 while i < size and buffer[i] != '' and count < 10:
@@ -143,9 +143,9 @@ class SSD:
         buffer_list = [x for x in self.get_buffer() if 'empty' not in x]
         if len(buffer_list) == 5:
             self.flush()
-        else:
-            self.optimization()
+
         self.insert_command(self.get_buffer(), f'W_{address}_{value}')
+        self.optimization()
         return value
 
     def get_buffer(self) -> List[str]:
@@ -187,9 +187,9 @@ class SSD:
         buffer_list = [x for x in self.get_buffer() if 'empty' not in x]
         if len(buffer_list) == 5:
             self.flush()
-        else:
-            self.optimization()
+
         self.insert_command(self.get_buffer(), f'E_{address}_{size}')
+        self.optimization()
 
         return "OK"
 
