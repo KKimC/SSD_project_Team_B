@@ -50,6 +50,7 @@ class WriteCommand(Command):
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"LBA: {lba_address}, VALUE: {hex_val}",
         )
+        print("[Write] Done")
 
 
 class ReadCommand(Command):
@@ -62,10 +63,12 @@ class ReadCommand(Command):
     def execute(self):
         lba_address = self.args[1]
         read_value = self.receiver.read(lba_address)
+        print(f"[Read] LBA {lba_address} : {read_value}")
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"LBA: {lba_address}, VALUE: {read_value.rstrip()}",
         )
+
         return read_value
 
 
@@ -77,12 +80,12 @@ class FullReadCommand(Command):
 
     def execute(self):
         for lba_address in range(100):
-            self.receiver.read(str(lba_address))
+            read_value = self.receiver.read(str(lba_address))
+            print(f"[Read] LBA {lba_address} : {read_value}")
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"FULLREAD",
         )
-
 
 class FullWriteCommand(Command):
     def is_valid(self) -> bool:
@@ -98,6 +101,7 @@ class FullWriteCommand(Command):
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"FULLWRITE VALUE: {hex_val}",
         )
+        print("[Full-Write] Done")
 
 
 class ExitCommand(Command):
@@ -146,6 +150,7 @@ class EraseCommand(Command):
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"LBA: {lba}, SIZE: {size}",
         )
+        print("[Erase] Done")
 
 
 class EraseRangeCommand(Command):
@@ -169,6 +174,7 @@ class EraseRangeCommand(Command):
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"START_LBA: {start_lba}, END_LBA: {end_lba}",
         )
+        print("[Erase-Range] Done")
 
 
 class ScriptCommand(Command):
@@ -223,3 +229,4 @@ class FlushCommand(Command):
             f"FLUSH",
         )
         self.receiver.flush()
+        print("[Flush] Done")
