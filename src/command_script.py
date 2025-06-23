@@ -1,7 +1,7 @@
 import inspect
 from abc import ABC, abstractmethod
 
-from constants import EMPTY_VALUE
+from constants import EMPTY_VALUE, PASS_TEXT, FAIL_TEXT
 from logger import Logger
 from ssd_controller import SSDController
 from utils.helpers import generate_random_hex
@@ -40,11 +40,11 @@ class FullWriteAndReadCommand(ScriptCommandType):
             lba_address = i * 5
             for value in write_value_list:
                 if not _read_compare(self.receiver, lba_address, value):
-                    print("FAIL")
+                    print(FAIL_TEXT)
                     return
 
                 lba_address += 1
-        print("PASS")
+        print(PASS_TEXT)
 
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
@@ -65,13 +65,13 @@ class PartialLbaWriteCommand(ScriptCommandType):
                 self.receiver.write(str(write_lba_address), write_value)
             for read_lba_address in range(5):
                 if not _read_compare(self.receiver, read_lba_address, write_value):
-                    print("FAIL")
+                    print(FAIL_TEXT)
                     return
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"SCRIPT_2",
         )
-        print("PASS")
+        print(PASS_TEXT)
 
 
 class WriteReadAgingCommand(ScriptCommandType):
@@ -86,17 +86,14 @@ class WriteReadAgingCommand(ScriptCommandType):
             for i, lba_address in enumerate(lba_address_list):
                 self.receiver.write(str(lba_address), write_value_list[i])
             for i, lba_address in enumerate(lba_address_list):
-                if (
-                    _read_compare(self.receiver, lba_address, write_value_list[i])
-                    == False
-                ):
-                    print("FAIL")
+                if not _read_compare(self.receiver, lba_address, write_value_list[i]):
+                    print(FAIL_TEXT)
                     return
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"SCRIPT_3",
         )
-        print("PASS")
+        print(PASS_TEXT)
 
 
 class EraseAndAgingCommand(ScriptCommandType):
@@ -114,13 +111,13 @@ class EraseAndAgingCommand(ScriptCommandType):
             self.receiver.erase(str(lba_address_list[0]), str(3))
             for lba_address in lba_address_list:
                 if not _read_compare(self.receiver, lba_address, EMPTY_VALUE):
-                    print("FAIL")
+                    print(FAIL_TEXT)
                     return
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"SCRIPT_4",
         )
-        print("PASS")
+        print(PASS_TEXT)
 
 
 list_script_commands = [

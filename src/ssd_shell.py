@@ -28,7 +28,7 @@ class SSDShell:
             if input_command_str.strip() == "":
                 return
             print(INVALID_COMMAND)
-            logger.print("Shell.run()", f"INVALID COMMAND입니다.")
+            logger.print("Shell.run()", f"{INVALID_COMMAND}입니다.")
             return
 
         self._execute_command(command)
