@@ -27,6 +27,7 @@ class SSDShell:
         if not command or not command.is_valid():
             if input_command_str.strip() == "":
                 return
+            print(INVALID_COMMAND)
             logger.print("Shell.run()", f"INVALID COMMAND입니다.")
             return
 
@@ -54,6 +55,7 @@ class SSDShell:
             command.execute()
         except ExitException:
             self._is_running = False
+
 
 class SSDRunner:
     def __init__(self, receiver=None):
