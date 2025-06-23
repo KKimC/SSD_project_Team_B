@@ -655,6 +655,56 @@ def test_optimization_한번에_erase가능한_범위안에_write_된경우_comm
             ['1_W_1_0x00000000', '2_W_1_0x00000000', '3_W_1_0x00000001', '4_empty', '5_empty'],
             ['1_W_1_0x00000001', '2_empty', '3_empty', '4_empty', '5_empty']
         ),
+        # 11) merge forbidden by size, drop overlapping write
+        (
+            ['1_E_0_6', '2_E_6_6', '3_W_8_0x12345678', '4_empty', '5_empty'],
+            ['1_E_0_7', '2_E_9_3', '3_W_8_0x12345678', '4_empty', '5_empty']
+        ),
+        # 12) nested erases merge into the larger one
+        (
+            ['1_E_4_5', '2_E_5_3', '3_empty', '4_empty', '5_empty'],
+            ['1_E_4_5', '2_empty', '3_empty', '4_empty', '5_empty']
+        ),
+        # 13) overlap+merge erases, drop both writes
+        (
+            ['1_W_6_0x12345678', '2_E_4_4', '3_W_5_0x12345678', '4_E_6_2', '5_empty'],
+            ['1_E_4_4', '2_W_5_0x12345678', '3_empty', '4_empty', '5_empty']
+        ),
+        # 14) no-op: single erase and writes far away
+        (
+            ['1_W_9_0x12345678', '2_E_0_1', '3_W_3_0x12345678', '4_empty', '5_empty'],
+            ['1_W_9_0x12345678', '2_E_0_1', '3_W_3_0x12345678', '4_empty', '5_empty']
+        ),
+        # 15) boundary merge at high addresses
+        (
+            ['1_E_95_5', '2_E_99_1', '3_empty', '4_empty', '5_empty'],
+            ['1_E_95_5', '2_empty', '3_empty', '4_empty', '5_empty']
+        ),
+        # 16) boundary disjoint, no merge
+        (
+            ['1_E_90_10', '2_E_80_5', '3_empty', '4_empty', '5_empty'],
+            ['1_E_90_10', '2_E_80_5', '3_empty', '4_empty', '5_empty']
+        ),
+        # 17) ignore+boundary merge drop write at 99
+        (
+            ['1_W_99_0x12345678', '2_E_95_5', '3_E_99_1', '4_empty', '5_empty'],
+            ['1_E_95_5', '2_empty', '3_empty', '4_empty', '5_empty']
+        ),
+        # 18) small boundary merge at end
+        (
+            ['1_E_97_3', '2_E_98_1', '3_empty', '4_empty', '5_empty'],
+            ['1_E_97_3', '2_empty', '3_empty', '4_empty', '5_empty']
+        ),
+        # 19) all empty
+        (
+            ['1_empty', '2_empty', '3_empty', '4_empty', '5_empty'],
+            ['1_empty', '2_empty', '3_empty', '4_empty', '5_empty']
+        ),
+        # 20) all writes to same LBA, keep last
+        (
+            ['1_W_42_0xAAAAAAAA', '2_W_42_0xBBBBBBBB', '3_W_42_0xCCCCCCCC', '4_W_42_0xDDDDDDDD', '5_W_42_0xEEEEEEEE'],
+            ['1_W_42_0xEEEEEEEE', '2_empty', '3_empty', '4_empty', '5_empty']
+        ),
     ]
 )
 def test_optimization_test_case_들에_대하여_command_length가_적절하며_nand_결과를_동일하게_만드는지(ssd_file_manager_mk, ssd_sut, test_buffer, result_buffer):
