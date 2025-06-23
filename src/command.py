@@ -55,7 +55,7 @@ class WriteCommand(Command):
 
 class ReadCommand(Command):
     def is_valid(self) -> bool:
-        if len(self.args) < 2:
+        if len(self.args) != 2:
             return False
 
         return is_valid_lba_address(self.args[1])
