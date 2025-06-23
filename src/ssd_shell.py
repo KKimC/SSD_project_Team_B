@@ -26,9 +26,10 @@ class SSDShell:
         return self._is_running
 
     def run(self):
-        command = self._parse_command()
+        input_command_str, command = self._parse_command()
         if not command or not command.is_valid():
-            print(INVALID_COMMAND)
+            if input_command_str.strip() == "":
+                return
             logger.print("Shell.run()", f"INVALID COMMAND입니다.")
             return
 
@@ -58,14 +59,14 @@ class SSDShell:
         command_str = self._make_command()
         command_list = command_str.split()
         if not command_list:
-            return None
+            return command_str, None
 
         command_type = command_list[0]
         command_class = CommandFactory.create(command_type)
         if not command_class:
-            return None
+            return command_str, None
 
-        return command_class(args=command_list, receiver=self._receiver)
+        return command_str, command_class(args=command_list, receiver=self._receiver)
 
     def _execute_command(self, command: Command):
         try:
