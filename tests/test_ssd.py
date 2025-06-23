@@ -386,3 +386,48 @@ def test_optimization_ignore_compare_command(mocker, ssd_file_manager_mk, ssd_su
     optimized_length = len([x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x])
     result_length = len([x for x in result_buffer if 'empty' not in x])
     assert optimized_length <= result_length
+
+def test_optimization_0으로_write_하는경우_nand(mocker, ssd_file_manager_mk, ssd_sut):
+    test_buffer = ['1_W_1_0x00000000', '2_W_2_0x00000000', '3_empty', '4_empty', '5_empty']
+    result_buffer = ['1_E_1_2', '2_empty', '3_empty', '4_empty', '5_empty']
+    # optimized_buffer = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
+    optimized_buffer = ssd_sut.optimization(test_buffer)
+    ssd_checker = SSDChecker()
+    assert ssd_checker.check_optimization(optimized_buffer, result_buffer) == True
+
+def test_optimization_0으로_write_하는경우_command(mocker, ssd_file_manager_mk, ssd_sut):
+    test_buffer = ['1_W_1_0x00000000', '2_W_2_0x00000000', '3_empty', '4_empty', '5_empty']
+    result_buffer = ['1_E_1_2', '2_empty', '3_empty', '4_empty', '5_empty']
+    optimized_length = len([x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x])
+    result_length = len([x for x in result_buffer if 'empty' not in x])
+    assert optimized_length <= result_length
+
+def test_optimization_0으로_write_하고_덮어쓰기_nand(mocker, ssd_file_manager_mk, ssd_sut):
+    test_buffer = ['1_W_1_0x00000000', '2_W_2_0x00000000', '3_W_1_0x12345678', '4_empty', '5_empty']
+    result_buffer = ['1_E_2_1', '2_W_1_0x12345678', '3_empty', '4_empty', '5_empty']
+    # optimized_buffer = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
+    optimized_buffer = ssd_sut.optimization(test_buffer)
+    ssd_checker = SSDChecker()
+    assert ssd_checker.check_optimization(optimized_buffer, result_buffer) == True
+
+def test_optimization_0으로_write_하고_덮어쓰기_command(mocker, ssd_file_manager_mk, ssd_sut):
+    test_buffer = ['1_W_1_0x00000000', '2_W_2_0x00000000', '3_W_1_0x12345678', '4_empty', '5_empty']
+    result_buffer = ['1_E_2_1', '2_W_1_0x12345678', '3_empty', '4_empty', '5_empty']
+    optimized_length = len([x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x])
+    result_length = len([x for x in result_buffer if 'empty' not in x])
+    assert optimized_length <= result_length
+
+def test_optimization_한번에_erase가능한_범위안에_write_된경우_nand(mocker, ssd_file_manager_mk, ssd_sut):
+    test_buffer = ['1_W_2_0x12345678', '2_E_3_4', '3_W_5_0x12345678', '4_E_1_4', '5_empty']
+    result_buffer = ['1_E_1_6', '2_W_5_0x12345678', '3_empty', '4_empty', '5_empty']
+    # optimized_buffer = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
+    optimized_buffer = ssd_sut.optimization(test_buffer)
+    ssd_checker = SSDChecker()
+    assert ssd_checker.check_optimization(optimized_buffer, result_buffer) == True
+
+def test_optimization_한번에_erase가능한_범위안에_write_된경우_command(mocker, ssd_file_manager_mk, ssd_sut):
+    test_buffer = ['1_W_2_0x12345678', '2_E_3_4', '3_W_5_0x12345678', '4_E_1_4', '5_empty']
+    result_buffer = ['1_E_1_6', '2_W_5_0x12345678', '3_empty', '4_empty', '5_empty']
+    optimized_length = len([x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x])
+    result_length = len([x for x in result_buffer if 'empty' not in x])
+    assert optimized_length <= result_length
