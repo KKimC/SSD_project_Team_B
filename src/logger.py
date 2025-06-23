@@ -1,5 +1,4 @@
 import os
-import functools
 import glob
 from datetime import datetime
 

@@ -3,19 +3,18 @@ from abc import abstractmethod, ABC
 from logger import Logger
 import inspect
 
-from src.command_script import (
-    ScriptCommandType,
+from command_script import (
     list_script_commands,
     get_matched_script,
 )
-from src.constants import HELP_TEXT, MAX_ERASE_SIZE
-from src.custom_exception import ExitException
-from src.ssd_controller import SSDController
-from src.utils.helpers import (
+from constants import HELP_TEXT, MAX_ERASE_SIZE
+from custom_exception import ExitException
+from ssd_controller import SSDController
+from utils.helpers import (
     adjust_lba_and_count,
     normalize_lba_range,
 )
-from src.utils.validators import (
+from utils.validators import (
     is_int,
     is_valid_lba_address,
     is_valid_8char_hex,

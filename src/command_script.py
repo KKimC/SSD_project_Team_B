@@ -1,11 +1,11 @@
 import inspect
 from abc import ABC, abstractmethod
 
-from src.constants import TestScriptType, EMPTY_VALUE
-from src.custom_exception import ExitException
-from src.logger import Logger
-from src.ssd_controller import SSDController
-from src.utils.helpers import generate_random_hex
+from constants import EMPTY_VALUE
+from custom_exception import ExitException
+from logger import Logger
+from ssd_controller import SSDController
+from utils.helpers import generate_random_hex
 
 
 logger = Logger()

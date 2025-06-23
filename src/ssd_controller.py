@@ -22,19 +22,12 @@ class SSDController:
         return read_value
 
     def erase(self, lba: str, size: str):
-        env = os.environ.copy()
-        env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        ssd_file_path = os.path.join(script_dir, "ssd.py")
 
-        result = subprocess.run(
-            ["python", "ssd.py", "E", lba, size],
-            capture_output=True,
-            text=True,
-            env=env,
-        )
-        read_value = result.stdout
-      
+        subprocess.run(["python", ssd_file_path, "E", lba, size])
+
     def flush(self):
         script_dir = os.path.dirname(os.path.abspath(__file__))
         ssd_file_path = os.path.join(script_dir, "ssd.py")
         subprocess.run(["python", ssd_file_path, "F"])
-

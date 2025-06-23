@@ -1,4 +1,4 @@
-from src.command import (
+from command import (
     WriteCommand,
     ReadCommand,
     FullWriteCommand,
@@ -10,7 +10,6 @@ from src.command import (
     EraseCommand,
     EraseRangeCommand,
 )
-from src.utils.validators import is_right_script_name
 
 
 class CommandFactory:
