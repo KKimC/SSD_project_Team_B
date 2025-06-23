@@ -29,6 +29,7 @@ class FullWriteAndReadCommand(ScriptCommandType):
     SCRIPT_TYPE_FULL = "1_FullWriteAndReadCompare"
 
     def execute(self):
+        print(f"{self.SCRIPT_TYPE_FULL} ___ Run...", end='', flush=True)
         for i in range(20):
             write_value_list = [generate_random_hex() for _ in range(5)]
 
@@ -40,8 +41,13 @@ class FullWriteAndReadCommand(ScriptCommandType):
             lba_address = i * 5
             for value in write_value_list:
                 if _read_compare(self.receiver, lba_address, value) == False:
-                    raise ExitException
+                    print("FAIL")
+                    return
+                    # raise ExitException
+
                 lba_address += 1
+        print("PASS")
+
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"SCRIPT_1",
@@ -53,6 +59,7 @@ class PartialLbaWriteCommand(ScriptCommandType):
     SCRIPT_TYPE_FULL = "2_PartialLBAWrite"
 
     def execute(self):
+        print(f"{self.SCRIPT_TYPE_FULL} ___ Run...", end='', flush=True)
         for _ in range(30):
             write_value = generate_random_hex()
             lba_address_list = [4, 0, 3, 1, 2]
@@ -60,11 +67,14 @@ class PartialLbaWriteCommand(ScriptCommandType):
                 self.receiver.write(str(write_lba_address), write_value)
             for read_lba_address in range(5):
                 if _read_compare(self.receiver, read_lba_address, write_value) == False:
-                    raise ExitException
+                    print("FAIL")
+                    return
+                    # raise ExitException
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"SCRIPT_2",
         )
+        print("PASS")
 
 
 class WriteReadAgingCommand(ScriptCommandType):
@@ -72,6 +82,7 @@ class WriteReadAgingCommand(ScriptCommandType):
     SCRIPT_TYPE_FULL = "3_WriteReadAging"
 
     def execute(self):
+        print(f"{self.SCRIPT_TYPE_FULL} ___ Run...", end='', flush=True)
         lba_address_list = [0, 99]
         for _ in range(200):
             write_value_list = [generate_random_hex()] * 2
@@ -82,11 +93,15 @@ class WriteReadAgingCommand(ScriptCommandType):
                     _read_compare(self.receiver, lba_address, write_value_list[i])
                     == False
                 ):
-                    raise ExitException
+                    print("FAIL")
+                    return
+                    # raise ExitException
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"SCRIPT_3",
         )
+        print("PASS")
+
 
 
 class EraseAndAgingCommand(ScriptCommandType):
@@ -94,6 +109,7 @@ class EraseAndAgingCommand(ScriptCommandType):
     SCRIPT_TYPE_FULL = "4_EraseAndWriteAging"
 
     def execute(self):
+        print(f"{self.SCRIPT_TYPE_FULL} ___ Run...", end='', flush=True)
         for i in range(30):
             lba_address_list = [2 * (i + 1), 2 * (i + 1) + 1, 2 * (i + 1) + 2]
             write_value = generate_random_hex()
@@ -103,11 +119,14 @@ class EraseAndAgingCommand(ScriptCommandType):
             self.receiver.erase(str(lba_address_list[0]), str(3))
             for lba_address in lba_address_list:
                 if _read_compare(self.receiver, lba_address, EMPTY_VALUE) == False:
-                    raise ExitException
+                    print("FAIL")
+                    return
+                    # raise ExitException
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"SCRIPT_4",
         )
+        print("PASS")
 
 
 list_script_commands = [
