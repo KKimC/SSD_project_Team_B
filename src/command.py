@@ -2,11 +2,16 @@ from typing import List
 from abc import abstractmethod, ABC
 from logger import Logger
 import inspect
-from src.constants import HELP_TEXT, TestScriptType, EMPTY_VALUE, MAX_ERASE_SIZE
+
+from src.command_script import (
+    ScriptCommandType,
+    list_script_commands,
+    get_matched_script,
+)
+from src.constants import HELP_TEXT, MAX_ERASE_SIZE
 from src.custom_exception import ExitException
 from src.ssd_controller import SSDController
 from src.utils.helpers import (
-    generate_random_hex,
     adjust_lba_and_count,
     normalize_lba_range,
 )
@@ -14,7 +19,6 @@ from src.utils.validators import (
     is_int,
     is_valid_lba_address,
     is_valid_8char_hex,
-    is_right_script_name,
 )
 
 logger = Logger()
@@ -97,7 +101,6 @@ class FullWriteCommand(Command):
         )
 
 
-
 class ExitCommand(Command):
     def is_valid(self) -> bool:
         if len(self.args) != 1:
@@ -162,118 +165,36 @@ class EraseRangeCommand(Command):
         start_lba, end_lba = int(self.args[1]), int(self.args[2])
         adjusted_start_lba, total = normalize_lba_range(start_lba, end_lba)
         erase_per_chunk(self.receiver, adjusted_start_lba, total)
-        
+
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"START_LBA: {start_lba}, END_LBA: {end_lba}",
         )
 
-class ScriptCommand(Command):
-    def __init__(self, args: List[str], receiver: SSDController):
-        super().__init__(args, receiver)
-        self._test_script_type = ""
 
-    def is_valid(self) -> bool:
-        if len(self.args) != 1:
-            return False
-        script_name = self.args[0]
-        if is_right_script_name(script_name, TestScriptType.FULL_WRITE_AND_READ.value):
-            self._test_script_type = TestScriptType.FULL_WRITE_AND_READ.value
-            return True
-        if is_right_script_name(script_name, TestScriptType.PARTIAL_LBA_WRITE.value):
-            self._test_script_type = TestScriptType.PARTIAL_LBA_WRITE.value
-            return True
-        if is_right_script_name(script_name, TestScriptType.WRITE_READ_AGING.value):
-            self._test_script_type = TestScriptType.WRITE_READ_AGING.value
-            return True
-        if is_right_script_name(script_name, TestScriptType.ERASE_AND_AGING.value):
-            self._test_script_type = TestScriptType.ERASE_AND_AGING.value
-            return True
+class ScriptCommand(Command):
+    @staticmethod
+    def is_script_name_matched(command_str: str) -> bool:
+        for script_command in list_script_commands:
+            if command_str.startswith(script_command.SCRIPT_TYPE):
+                return True
         return False
 
+    def __init__(self, args: List[str], receiver: SSDController):
+        super().__init__(args, receiver)
+
+        # inject strategy
+        script_class = get_matched_script(args[0])
+        self.script_command_type = script_class(self.args, self.receiver)
+
+    def is_valid(self) -> bool:
+        return True if len(self.args) == 1 else False
+
     def execute(self):
-        if self._test_script_type == TestScriptType.FULL_WRITE_AND_READ.value:
-            self._execute_script_1()
-        elif self._test_script_type == TestScriptType.PARTIAL_LBA_WRITE.value:
-            self._execute_script_2()
-        elif self._test_script_type == TestScriptType.WRITE_READ_AGING.value:
-            self._execute_script_3()
-        elif self._test_script_type == TestScriptType.ERASE_AND_AGING.value:
-            self._execute_script_4()
-
-    def _execute_script_1(self):
-        for i in range(20):
-            write_value_list = [generate_random_hex() for _ in range(5)]
-
-            lba_address = i * 5
-            for value in write_value_list:
-                self.receiver.write(str(lba_address), value)
-                lba_address += 1
-
-            lba_address = i * 5
-            for value in write_value_list:
-                self._read_compare_and_check_pass_or_fail(lba_address, value)
-                lba_address += 1
-        logger.print(
-            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
-            f"SCRIPT_1",
-        )
-
-    def _execute_script_2(self):
-        for _ in range(30):
-            write_value = generate_random_hex()
-            lba_address_list = [4, 0, 3, 1, 2]
-            for write_lba_address in lba_address_list:
-                self.receiver.write(str(write_lba_address), write_value)
-            for read_lba_address in range(5):
-                self._read_compare_and_check_pass_or_fail(read_lba_address, write_value)
-        logger.print(
-            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
-            f"SCRIPT_2",
-        )
-
-    def _execute_script_3(self):
-        lba_address_list = [0, 99]
-        for _ in range(200):
-            write_value_list = [generate_random_hex()] * 2
-            for i, lba_address in enumerate(lba_address_list):
-                self.receiver.write(str(lba_address), write_value_list[i])
-            for i, lba_address in enumerate(lba_address_list):
-                self._read_compare_and_check_pass_or_fail(
-                    lba_address, write_value_list[i]
-                )
-        logger.print(
-            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
-            f"SCRIPT_3",
-        )
-
-    def _execute_script_4(self):
-        for i in range(30):
-            lba_address_list = [2 * (i + 1), 2 * (i + 1) + 1, 2 * (i + 1) + 2]
-            write_value = generate_random_hex()
-            self.receiver.write(str(lba_address_list[0]), write_value)
-            # Overwrite
-            self.receiver.write(str(lba_address_list[0]), write_value)
-            self.receiver.erase(str(lba_address_list[0]), str(3))
-            for lba_address in lba_address_list:
-                self._read_compare_and_check_pass_or_fail(lba_address, EMPTY_VALUE)
-        logger.print(
-            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
-            f"SCRIPT_4",
-        )
-
-    def _read_compare_and_check_pass_or_fail(
-        self, read_lba_address: int, write_value: str
-    ):
-        if self._read_compare(read_lba_address, write_value):
-            print("PASS")
-        else:
-            print("FAIL")
-            raise ExitException
+        self.script_command_type.execute()
 
     def _read_compare(self, lba_address: int, value: str) -> bool:
-        result = self.receiver.read(str(lba_address))
-        return result.strip() == value.strip()
+        return self.receiver.read(str(lba_address)).strip() == value.strip()
 
 
 class HelpCommand(Command):
