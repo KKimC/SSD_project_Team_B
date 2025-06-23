@@ -26,6 +26,7 @@ class ScriptCommandType(ABC):
 
 class FullWriteAndReadCommand(ScriptCommandType):
     SCRIPT_TYPE = "1_"
+    SCRIPT_TYPE_FULL = "1_FullWriteAndReadCompare"
 
     def execute(self):
         for i in range(20):
@@ -49,6 +50,7 @@ class FullWriteAndReadCommand(ScriptCommandType):
 
 class PartialLbaWriteCommand(ScriptCommandType):
     SCRIPT_TYPE = "2_"
+    SCRIPT_TYPE_FULL = "2_PartialLBAWrite"
 
     def execute(self):
         for _ in range(30):
@@ -67,6 +69,7 @@ class PartialLbaWriteCommand(ScriptCommandType):
 
 class WriteReadAgingCommand(ScriptCommandType):
     SCRIPT_TYPE = "3_"
+    SCRIPT_TYPE_FULL = "3_WriteReadAging"
 
     def execute(self):
         lba_address_list = [0, 99]
@@ -88,6 +91,7 @@ class WriteReadAgingCommand(ScriptCommandType):
 
 class EraseAndAgingCommand(ScriptCommandType):
     SCRIPT_TYPE = "4_"
+    SCRIPT_TYPE_FULL = "4_EraseAndWriteAging"
 
     def execute(self):
         for i in range(30):
@@ -116,6 +120,9 @@ list_script_commands = [
 
 def get_matched_script(command_str: str):
     for script_command in list_script_commands:
-        if command_str.startswith(script_command.SCRIPT_TYPE):
+        if (
+            command_str.startswith(script_command.SCRIPT_TYPE)
+            and command_str in script_command.SCRIPT_TYPE_FULL
+        ):
             return script_command
     return None

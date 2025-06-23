@@ -15,9 +15,12 @@ class SSDFileManager():
         if not os.path.exists(buffer_dir):
             os.makedirs(buffer_dir)
 
+        existing_files = os.listdir(buffer_dir)
+        existing_prefixes = {filename.split('_')[0] for filename in existing_files}
+
         for i in range(1, 6):
-            buffer_file = os.path.join(buffer_dir, f"{i}_empty")
-            if not os.path.exists(buffer_file):
+            if str(i) not in existing_prefixes:
+                buffer_file = os.path.join(buffer_dir, f"{i}_empty")
                 with open(buffer_file, 'w', encoding='utf-8') as f:
                     f.write("")
 
