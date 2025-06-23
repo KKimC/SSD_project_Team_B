@@ -3,24 +3,21 @@ import subprocess
 
 
 class SSDController:
-    def write(self, lba_address: str, hex_val: str):
-        result = subprocess.run(
-            ["python", "ssd.py", "W", lba_address, hex_val],
-            capture_output=True,
-            text=True,
-        )
+    def write(self, lba: str, hex_val: str):
+        script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    def read(self, lba_address: str):
-        env = os.environ.copy()
-        env["SUBPROCESS_CALL"] = "1"  # subprocess 호출임을 알림
+        ssd_file_path = os.path.join(script_dir, "ssd.py")
+        subprocess.run(["python", ssd_file_path, "W", lba, hex_val])
 
-        result = subprocess.run(
-            ["python", "ssd.py", "R", lba_address],
-            capture_output=True,
-            text=True,
-            env=env,
-        )
-        read_value = result.stdout
+    def read(self, lba: str):
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+
+        ssd_file_path = os.path.join(script_dir, "ssd.py")
+        subprocess.run(["python", ssd_file_path, "R", lba])
+
+        output_file_path = os.path.join(script_dir, "ssd_output.txt")
+        with open(output_file_path, "r") as f:
+            read_value = f.read().strip()
 
         return read_value
 
@@ -35,4 +32,9 @@ class SSDController:
             env=env,
         )
         read_value = result.stdout
+      
+    def flush(self):
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        ssd_file_path = os.path.join(script_dir, "ssd.py")
+        subprocess.run(["python", ssd_file_path, "F"])
 
