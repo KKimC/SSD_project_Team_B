@@ -216,4 +216,8 @@ class FlushCommand(Command):
         return True
 
     def execute(self):
+        logger.print(
+            f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
+            f"FLUSH",
+        )
         self.receiver.flush()
