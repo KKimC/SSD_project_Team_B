@@ -1,19 +1,16 @@
 import os.path
-import re
 import sys
 
 from logger import Logger
 
+from command import Command
+from command_factory import CommandFactory
+from constants import INVALID_COMMAND
+from ssd_controller import SSDController
+
+from custom_exception import ExitException
+
 logger = Logger()
-
-
-from src.command import (
-    ExitException,
-    Command,
-)
-from src.command_factory import CommandFactory
-from src.constants import INVALID_COMMAND
-from src.ssd_controller import SSDController
 
 
 class SSDShell:

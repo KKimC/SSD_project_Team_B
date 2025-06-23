@@ -1,12 +1,10 @@
 /venv
 /.idea
-/tests/ssd_nand.txt
-/tests/ssd_output.txt
 /tests/buffer/
 /src/__pycache__/
 /tests/__pycache__/
 /logs
-/src/ssd_nand.txt
-/src/ssd_output.txt
 /src/shell_scripts.txt
 /src/utils/__pycache__/
+/src/buffer/
+/outputs/
