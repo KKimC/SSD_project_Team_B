@@ -4,7 +4,7 @@ import shutil
 import pytest
 import sys
 import src.ssd
-from src.ssd import SSD
+from src.ssd import SSD, Flush
 from src.ssd_file_manager import SSDFileManager
 import re
 
@@ -24,6 +24,7 @@ def ssd_file_manager_mk(mocker):
 def ssd_sut(ssd_file_manager_mk):
     ssd_sut = SSD()
     ssd_sut.select_file_manager(ssd_file_manager_mk)
+    ssd_sut.flush_handler = Flush(ssd_file_manager_mk)
     ssd_sut.update_buffer(['1_empty', '2_empty', '3_empty', '4_empty', '5_empty'])
     return ssd_sut
 
@@ -226,7 +227,7 @@ def test_erase명령어는_write명령어에_올바른LBA와_올바른_value0x00
 
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
 
-    spy_write = mocker.spy(ssd_sut, "flush_write")
+    spy_write = mocker.spy(ssd_sut.flush_handler, "flush_write")
     ssd_sut.erase(VALID_LBA_ADDRESS, ERASE_SIZE)
     ssd_sut.flush()
 
@@ -308,9 +309,9 @@ def test_flush는_리스트_순서대로_함수를_수행해야한다(mocker, ss
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
 
     calls = []
-    mocker.patch.object(ssd_sut, "flush_write",
+    mocker.patch.object(ssd_sut.flush_handler, "flush_write",
                         lambda addr, val: calls.append(("W", addr, val)))
-    mocker.patch.object(ssd_sut, "flush_erase",
+    mocker.patch.object(ssd_sut.flush_handler, "flush_erase",
                         lambda addr, cnt: calls.append(("E", addr, cnt)))
 
     ssd_sut.flush()
@@ -328,7 +329,7 @@ def test_flush는_명령어가_W인경우_flush_write함수에_올바른_인자�
     fake_nand = ["0x00000000" for _ in range(100)]
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
 
-    spy_flush_write = mocker.spy(ssd_sut, "flush_write")
+    spy_flush_write = mocker.spy(ssd_sut.flush_handler, "flush_write")
     ssd_sut.flush()
 
     spy_flush_write.assert_called_once_with(20, "ABC")
@@ -341,7 +342,7 @@ def test_flush는_명령어가_E인경우_flush_erase함수에_올바른_인자�
     fake_nand = ["0x00000000"] * 100
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
 
-    spy_flush_erase = mocker.spy(ssd_sut, "flush_erase")
+    spy_flush_erase = mocker.spy(ssd_sut.flush_handler, "flush_erase")
 
     ssd_sut.flush()
 
@@ -355,8 +356,8 @@ def test_flush_에_들어오는_bufferlist_안이_전부_emtpy_인경우_아무_
     fake_nand = ["0x00000000"] * 100
     ssd_file_manager_mk.read_ssd_nand.return_value = fake_nand
 
-    spy_flush_write = mocker.spy(ssd_sut, "flush_write")
-    spy_flush_erase = mocker.spy(ssd_sut, "flush_erase")
+    spy_flush_write = mocker.spy(ssd_sut.flush_handler, "flush_write")
+    spy_flush_erase = mocker.spy(ssd_sut.flush_handler, "flush_erase")
 
     ssd_sut.flush()
 
