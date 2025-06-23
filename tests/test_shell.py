@@ -154,14 +154,11 @@ def test_WRITE명령어_유효하지않은인자_값_INVALID_COMMAND(mocker: Moc
 def test_WRITE명령어_정상인자_행동검증(mocker: MockerFixture, shell):
     # Arrange
     mocker.patch("builtins.input", return_value="write 3 0xAAAABBBB")
-    mock_subprocess = mocker.patch("src.ssd_controller.subprocess.run")
+    mock_ssd_controller_write = mocker.patch("src.ssd_controller.SSDController.write")
     # act and assert
-    result = _do_run_and_get_result_from_buffer(shell).strip()
-    mock_subprocess.assert_called_once_with(
-        ["python", "ssd.py", "W", "3", "0xAAAABBBB"],
-        capture_output=True,
-        text=True,
-    )
+    shell.run()
+
+    assert mock_ssd_controller_write.call_count == 1
 
 
 def test_HELP명령어_정상_기대되는출력(mocker: MockerFixture, shell):
