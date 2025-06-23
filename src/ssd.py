@@ -41,7 +41,7 @@ class Optimizer:
         size = len(buffer)
         while i < size:
             val = buffer[i]
-            if val == '0x00000000':
+            if val != '':
                 start = i
                 count = 0
                 while i < size and buffer[i] != '' and count < 10:
