@@ -216,39 +216,53 @@ class SSD:
         self.update_buffer(result_cmd)
         return result_cmd
 
+class CommandInvoker:
+    def __init__(self, ssd):
+        self.ssd = ssd
+
+    def execute(self, args: List[str]):
+        if not args or len(args) < 2:
+            print("Usage: python ssd.py [R|W|E|F] [LBA] [VALUE or SIZE]")
+            return "ERROR"
+
+        command = args[1].upper()
+
+        if command == "F" and len(args) == 2:
+            return self.ssd.flush()
+
+        if len(args) < 3:
+            return self._error()
+
+        try:
+            address = int(args[2])
+        except ValueError:
+            return self._error()
+
+        if command == "R" and len(args) == 3:
+            return self.ssd.read(address)
+
+        elif command == "W" and len(args) == 4:
+            return self.ssd.write(address, args[3])
+
+        elif command == "E" and len(args) == 4:
+            try:
+                size = int(args[3])
+                return self.ssd.erase(address, size)
+            except ValueError:
+                return self._error()
+
+        else:
+            return self._error()
+
+    def _error(self):
+        self.ssd.ssd_file_manager.print_ssd_output("ERROR")
+        return "ERROR"
+
 
 def main():
     ssd = SSD()
-
-    if len(sys.argv) < 3:
-        print("Usage: python ssd.py R [LBA] or python ssd.py W [LBA] [VALUE]")
-        return "ERROR"
-
-    command = sys.argv[1]
-    try:
-        address = int(sys.argv[2])
-    except ValueError:
-        ssd.ssd_file_manager.print_ssd_output("ERROR")
-        return "ERROR"
-
-    if command == "R" and len(sys.argv) == 3:
-        read_result = ssd.read(address)
-        if os.getenv("SUBPROCESS_CALL") == "1":
-            print(read_result)
-
-    elif command == "W" and len(sys.argv) == 4:
-        value = sys.argv[3]
-        ssd.write(address, value)
-
-    elif command == "E" and len(sys.argv) == 4:
-        size = int(sys.argv[3])
-        ssd.erase(address, size)
-
-    elif command == "F" and len(sys.argv) == 1:
-        ssd.flush()
-
-    else:
-        ssd.ssd_file_manager.print_ssd_output("ERROR")
+    invoker = CommandInvoker(ssd)
+    invoker.execute(sys.argv)
 
 if __name__ == "__main__":
     main()
