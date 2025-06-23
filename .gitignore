@@ -8,3 +8,6 @@
 /src/utils/__pycache__/
 /src/buffer/
 /outputs/
+/.coverage
+/htmlcov
+/.pytest_cache
