@@ -131,6 +131,7 @@ class SSD:
             nand = self.ssd_file_manager.read_ssd_nand()
             value = nand[address]
         self.ssd_file_manager.print_ssd_output(value)
+
         return value
 
     def write(self, address=-1, value="ERROR"):
