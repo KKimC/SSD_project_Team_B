@@ -130,7 +130,7 @@ class SSD:
         else:
             nand = self.ssd_file_manager.read_ssd_nand()
             value = nand[address]
-            self.ssd_file_manager.print_ssd_output(value)
+        self.ssd_file_manager.print_ssd_output(value)
 
         return value
 
@@ -146,7 +146,6 @@ class SSD:
         else:
             self.optimization()
         self.insert_command(self.get_buffer(), f'W_{address}_{value}')
-
         return value
 
     def get_buffer(self) -> List[str]:
@@ -155,7 +154,6 @@ class SSD:
     def update_buffer(self, commands: List[str]) -> None:
         if len(commands) != 5:
             return
-
         buffer_dir = 'buffer'
 
         if os.path.exists(buffer_dir):
