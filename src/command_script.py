@@ -41,7 +41,7 @@ class FullWriteAndReadCommand(ScriptCommandType):
             for value in write_value_list:
                 if not _read_compare(self.receiver, lba_address, value):
                     print(FAIL_TEXT)
-                    return
+                    raise ExitException
 
                 lba_address += 1
         print(PASS_TEXT)
@@ -66,7 +66,8 @@ class PartialLbaWriteCommand(ScriptCommandType):
             for read_lba_address in range(5):
                 if not _read_compare(self.receiver, read_lba_address, write_value):
                     print(FAIL_TEXT)
-                    return
+                    raise ExitException
+                    
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"SCRIPT_2",
@@ -88,7 +89,8 @@ class WriteReadAgingCommand(ScriptCommandType):
             for i, lba_address in enumerate(lba_address_list):
                 if not _read_compare(self.receiver, lba_address, write_value_list[i]):
                     print(FAIL_TEXT)
-                    return
+                    raise ExitException
+
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"SCRIPT_3",
@@ -112,7 +114,8 @@ class EraseAndAgingCommand(ScriptCommandType):
             for lba_address in lba_address_list:
                 if not _read_compare(self.receiver, lba_address, EMPTY_VALUE):
                     print(FAIL_TEXT)
-                    return
+                    raise ExitException
+
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"SCRIPT_4",
