@@ -5,9 +5,79 @@ import os
 from ssd_file_manager import SSDFileManager
 from typing import List
 
+class Optimizer:
+    def __init__(self, ssd):
+        self.ssd = ssd
+
+    def optimization(self, buffer=None):
+        if buffer is None:
+            buffer = self.ssd.get_buffer()
+        result = self.process_commands_in_order(buffer)
+        result_cmd = self.buffer_to_commands(result)
+        self.ssd.update_buffer(result_cmd)
+        return result_cmd
+
+    def fast_read(self, address):
+        buffer = self.ssd.get_buffer()
+        result = self.process_commands_in_order(buffer)
+        return result[address] # 만약에 fast_read값이 없으면 '' return
+
+
+    def process_commands_in_order(self, commands):
+        buffer_memory = ['' for _ in range(100)]
+        def get_prefix(_cmd):
+            return int(_cmd.split('_')[0])
+        sorted_cmds = sorted(commands, key=get_prefix)
+        for cmd in sorted_cmds:
+            parts = cmd.split('_')
+            if len(parts) != 4:
+                continue
+            _, op, addr_str, val_str = parts
+            addr = int(addr_str)
+            if op == 'E':
+                count = int(val_str)
+                for i in range(addr, min(addr + count, 100)):
+                    buffer_memory[i] = '0x00000000'
+            elif op == 'W':
+                buffer_memory[addr] = val_str
+        return buffer_memory
+
+    def buffer_to_commands(self, buffer):
+        commands = []
+        i = 0
+        prefix = 1
+        size = len(buffer)
+        while i < size:
+            val = buffer[i]
+            if val == '0x00000000':
+                start = i
+                count = 0
+                while i < size and buffer[i] != '' and count < 10:
+                    count += 1
+                    i += 1
+                commands.append(f"{prefix}_E_{start}_{count}")
+                prefix += 1
+            else:
+                i += 1
+        i = 0
+        while i < size:
+            val = buffer[i]
+            if (val != '0x00000000') and (val != ''):
+                commands.append(f"{prefix}_W_{i}_{val}")
+                prefix += 1
+                i += 1
+            else:
+                i += 1
+
+        while len(commands) < 5:
+            commands.append(f'{prefix}_empty')
+            prefix += 1
+        return commands
+
 class SSD:
     def __init__(self):
         self.select_file_manager(SSDFileManager())
+        self.optimizer = Optimizer(self)
 
     def select_file_manager(self, file_manager):
         self.ssd_file_manager = file_manager
@@ -24,7 +94,7 @@ class SSD:
             return "ERROR"
 
         # optimazing
-        fast_read_value = self.fast_read(address)
+        fast_read_value = self.optimizer.fast_read(address)
         if fast_read_value != '':
             value = fast_read_value
         else:
@@ -44,13 +114,8 @@ class SSD:
         if len(buffer_list) == 5:
             self.flush()
         else:
-            self.optimization()
+            self.optimizer.optimization()
         self.insert_command(self.get_buffer(), f'W_{address}_{value}')
-
-        # 얘는 flush에 들어가야 되는 부분
-        # nand = self.ssd_file_manager.read_ssd_nand()
-        # nand[address] = value
-        # self.ssd_file_manager.patch_ssd_nand(nand)
 
         return value
 
@@ -92,11 +157,10 @@ class SSD:
 
         # optimizing
         buffer_list = [x for x in self.get_buffer() if 'empty' not in x]
-        print(self.get_buffer(), buffer_list)
         if len(buffer_list) == 5:
             self.flush()
         else:
-            self.optimization()
+            self.optimizer.optimization()
         self.insert_command(self.get_buffer(), f'E_{address}_{size}')
 
         return "OK"
@@ -152,70 +216,6 @@ class SSD:
         updated_buffer_list = ["1_empty", "2_empty", "3_empty", "4_empty", "5_empty"]
         self.update_buffer(updated_buffer_list)
 
-    def fast_read(self, address):
-        buffer = self.get_buffer()
-        result = self.process_commands_in_order(buffer)
-        return result[address] # 만약에 fast_read값이 없으면 '' return
-
-    def optimization(self, buffer=None):
-        if buffer is None:
-            buffer = self.get_buffer()
-        result = self.process_commands_in_order(buffer)
-        result_cmd = self.buffer_to_commands(result)
-        self.update_buffer(result_cmd)
-        return result_cmd
-
-    def process_commands_in_order(self, commands):
-        buffer_memory = ['' for _ in range(100)]
-        def get_prefix(_cmd):
-            return int(_cmd.split('_')[0])
-        sorted_cmds = sorted(commands, key=get_prefix)
-        for cmd in sorted_cmds:
-            parts = cmd.split('_')
-            if len(parts) != 4:
-                continue
-            _, op, addr_str, val_str = parts
-            addr = int(addr_str)
-            if op == 'E':
-                count = int(val_str)
-                for i in range(addr, min(addr + count, 100)):
-                    buffer_memory[i] = '0x00000000'
-            elif op == 'W':
-                buffer_memory[addr] = val_str
-        return buffer_memory
-
-    def buffer_to_commands(self, buffer):
-        commands = []
-        i = 0
-        prefix = 1
-        size = len(buffer)
-        while i < size:
-            val = buffer[i]
-            if val == '0x00000000':
-                start = i
-                count = 0
-                while i < size and buffer[i] != '' and count < 10:
-                    count += 1
-                    i += 1
-                commands.append(f"{prefix}_E_{start}_{count}")
-                prefix += 1
-            else:
-                i += 1
-        i = 0
-        while i < size:
-            val = buffer[i]
-            if (val != '0x00000000') and (val != ''):
-                commands.append(f"{prefix}_W_{i}_{val}")
-                prefix += 1
-                i += 1
-            else:
-                i += 1
-
-        while len(commands) < 5:
-            commands.append(f'{prefix}_empty')
-            prefix += 1
-        return commands
-
     def insert_command(self, command_list, command_string):
         for i, cmd in enumerate(command_list):
             if cmd.endswith("empty"):
@@ -225,18 +225,9 @@ class SSD:
                 break
         self.update_buffer(command_list)
 
-    def test_write(self, add, val):
-        a = self.write(add, val)
-        self.flush()
-        return a
-
-    def test_read(self):
-        return self.read
-
-    def test_erase(self, add, ran):
-        a = self.erase(add, ran)
-        self.flush()
-        return a
+    # test를 위한 임시함수
+    def optimization(self, test_buffer):
+        return self.optimizer.optimization(test_buffer)
 
 
 def main():
