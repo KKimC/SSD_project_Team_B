@@ -176,7 +176,10 @@ class ScriptCommand(Command):
     @staticmethod
     def is_script_name_matched(command_str: str) -> bool:
         for script_command in list_script_commands:
-            if command_str.startswith(script_command.SCRIPT_TYPE):
+            if (
+                command_str.startswith(script_command.SCRIPT_TYPE)
+                and command_str in script_command.SCRIPT_TYPE_FULL
+            ):
                 return True
         return False
 
