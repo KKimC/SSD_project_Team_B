@@ -210,7 +210,8 @@ pytest tests/
 ### 🏭 Factory 패턴
 
 - 셸 명령어 객체 생성을 `command_factory`에 위임하여, 명령어 유형 추가 시 유연하게 대처할 수 있습니다.
-![img_4.png](img_4.png)
+![image](https://github.com/user-attachments/assets/20d70738-ad54-4ea8-a9ab-19946d5b2471)
+
 
 
 ---
@@ -218,7 +219,9 @@ pytest tests/
 ### 📋 Command 패턴
 
 - 명령 실행 로직을 `Command` 객체와 `Receiver`(예: SSD)에 위임하여 실행 책임을 분리하고 확장성을 확보합니다.
-![img_6.png](img_6.png)
+![image](https://github.com/user-attachments/assets/90e3c51b-0383-4ecb-9c8a-a1017d555c6d)
+
+
 
 
 ---
@@ -227,7 +230,8 @@ pytest tests/
 
 - 다양한 테스트 스크립트를 전략 객체로 처리하여 셸 로직의 일관성과 테스트 확장성을 제공합니다.
 
-![img_5.png](img_5.png)
+![image](https://github.com/user-attachments/assets/b20e9638-e11c-4ee0-9895-ef25f27548a4)
+
 
 ### 🔒 Singleton 패턴
 
