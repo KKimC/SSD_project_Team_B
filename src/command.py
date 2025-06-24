@@ -63,10 +63,10 @@ class ReadCommand(Command):
     def execute(self):
         lba_address = self.args[1]
         read_value = self.receiver.read(lba_address)
-        print(f"[Read] LBA {lba_address} : {read_value}")
+        print(f"[Read] LBA {int(lba_address)} : {read_value}")
         logger.print(
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
-            f"LBA: {lba_address}, VALUE: {read_value.rstrip()}",
+            f"LBA: {int(lba_address)}, VALUE: {read_value.rstrip()}",
         )
 
         return read_value
@@ -86,6 +86,7 @@ class FullReadCommand(Command):
             f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}()",
             f"FULLREAD",
         )
+
 
 class FullWriteCommand(Command):
     def is_valid(self) -> bool:
