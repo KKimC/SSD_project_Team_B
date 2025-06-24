@@ -24,7 +24,7 @@
 
 ```bash
 git clone https://github.com/KKimC/SSD_project_Team_B.git
-cd SSD_project_Team_B
+cd SSD_project_Team_B/src
 ```
 
 ### 2. PYTHONPATH 설정
@@ -42,15 +42,15 @@ export PYTHONPATH=src
 ### 3. SSD 셸 실행
 
 ```bash
-python src/ssd_shell.py
+python ssd_shell.py
 ```
 
 ### 4. 사용 가능한 명령어 (셸 내)
 
 ```shell
-> write 0 dataA
-> write 1 dataB
-> erase 0
+> write 0 0x11111111
+> write 1 0x22222222
+> erase 0 20
 > read 0
 > flush
 > exit
