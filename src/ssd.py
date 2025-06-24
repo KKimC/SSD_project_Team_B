@@ -151,22 +151,20 @@ class SSD:
     def get_buffer(self) -> List[str]:
         return sorted(os.listdir('buffer'))
 
-    def update_buffer(self, commands: List[str]) -> None:
+    def update_buffer(self, commands: list[str]) -> None:
         if len(commands) != 5:
             return
+
         buffer_dir = 'buffer'
 
-        if os.path.exists(buffer_dir):
-            shutil.rmtree(buffer_dir)
-        os.makedirs(buffer_dir, exist_ok=True)
-
-        for idx, command in enumerate(commands[:5], start=1):
-            file_path = os.path.join(buffer_dir, f"{idx}_temp")
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(command)
-
-            target_path = os.path.join(buffer_dir, command)
-            os.replace(file_path, target_path)
+        for idx, new_name in enumerate(commands, start=1):
+            old_prefix = f"{idx}_"
+            for fname in os.listdir(buffer_dir):
+                if fname.startswith(old_prefix) and fname != new_name:
+                    old_path = os.path.join(buffer_dir, fname)
+                    new_path = os.path.join(buffer_dir, new_name)
+                    os.rename(old_path, new_path)
+                    break
 
     def erase(self, address=-1, size=0):
         MAX_ERASE_SIZE = 10
