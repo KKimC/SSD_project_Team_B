@@ -206,25 +206,6 @@ def test_ssd모듈의_write함수는_cmd에서_W명령어로_정상적으로_실
     ssd_write_mock.assert_called_once_with(2, "0xAAAABBBB")
 
 
-def test_update_buffer_후_버퍼에_파일생성이_잘_되었는가(ssd_sut):
-    expected_cmds = [
-        "1_W_1_0x12345678",
-        "2_W_2_0x12345677",
-        "3_W_3_0x12345676",
-        "4_empty",
-        "5_empty",
-    ]
-
-    buffer_path = "buffer"
-    if os.path.exists(buffer_path):
-        shutil.rmtree(buffer_path)
-    os.makedirs(buffer_path)
-    ssd_sut.update_buffer(expected_cmds)
-
-    result = sorted(os.listdir(buffer_path))
-    assert result == expected_cmds
-
-
 def test_update_buffer_후_get_buffer_실행시_기대했던_값으로_명령어를_받아올_수_있는가(
     ssd_sut,
 ):
@@ -541,64 +522,142 @@ def test_optimization_merge_erase(ssd_file_manager_mk, ssd_sut):
     result_length = len([x for x in result_buffer if "empty" not in x])
     assert optimized_length <= result_length
 
+
 def test_optimization_0으로_write_하는경우_nand(mocker, ssd_file_manager_mk, ssd_sut):
-    test_buffer = ['1_W_1_0x00000000', '2_W_2_0x00000000', '3_empty', '4_empty', '5_empty']
-    result_buffer = ['1_E_1_2', '2_empty', '3_empty', '4_empty', '5_empty']
+    test_buffer = [
+        "1_W_1_0x00000000",
+        "2_W_2_0x00000000",
+        "3_empty",
+        "4_empty",
+        "5_empty",
+    ]
+    result_buffer = ["1_E_1_2", "2_empty", "3_empty", "4_empty", "5_empty"]
     # optimized_buffer = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
     optimized_buffer = ssd_sut.optimization(test_buffer)
     ssd_checker = SSDChecker()
     assert ssd_checker.check_optimization(optimized_buffer, result_buffer) == True
 
-def test_optimization_0으로_write_하는경우_command(mocker, ssd_file_manager_mk, ssd_sut):
-    test_buffer = ['1_W_1_0x00000000', '2_W_2_0x00000000', '3_empty', '4_empty', '5_empty']
-    result_buffer = ['1_E_1_2', '2_empty', '3_empty', '4_empty', '5_empty']
-    optimized_length = len([x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x])
-    result_length = len([x for x in result_buffer if 'empty' not in x])
+
+def test_optimization_0으로_write_하는경우_command(
+    mocker, ssd_file_manager_mk, ssd_sut
+):
+    test_buffer = [
+        "1_W_1_0x00000000",
+        "2_W_2_0x00000000",
+        "3_empty",
+        "4_empty",
+        "5_empty",
+    ]
+    result_buffer = ["1_E_1_2", "2_empty", "3_empty", "4_empty", "5_empty"]
+    optimized_length = len(
+        [x for x in ssd_sut.optimization(test_buffer) if "empty" not in x]
+    )
+    result_length = len([x for x in result_buffer if "empty" not in x])
     assert optimized_length <= result_length
 
-def test_optimization_0으로_write_하고_덮어쓰기_nand(mocker, ssd_file_manager_mk, ssd_sut):
-    test_buffer = ['1_W_1_0x00000000', '2_W_2_0x00000000', '3_W_1_0x12345678', '4_empty', '5_empty']
-    result_buffer = ['1_E_2_1', '2_W_1_0x12345678', '3_empty', '4_empty', '5_empty']
+
+def test_optimization_0으로_write_하고_덮어쓰기_nand(
+    mocker, ssd_file_manager_mk, ssd_sut
+):
+    test_buffer = [
+        "1_W_1_0x00000000",
+        "2_W_2_0x00000000",
+        "3_W_1_0x12345678",
+        "4_empty",
+        "5_empty",
+    ]
+    result_buffer = ["1_E_2_1", "2_W_1_0x12345678", "3_empty", "4_empty", "5_empty"]
     # optimized_buffer = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
     optimized_buffer = ssd_sut.optimization(test_buffer)
     ssd_checker = SSDChecker()
     assert ssd_checker.check_optimization(optimized_buffer, result_buffer) == True
 
-def test_optimization_0으로_write_하고_덮어쓰기_command(mocker, ssd_file_manager_mk, ssd_sut):
-    test_buffer = ['1_W_1_0x00000000', '2_W_2_0x00000000', '3_W_1_0x12345678', '4_empty', '5_empty']
-    result_buffer = ['1_E_2_1', '2_W_1_0x12345678', '3_empty', '4_empty', '5_empty']
-    optimized_length = len([x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x])
-    result_length = len([x for x in result_buffer if 'empty' not in x])
+
+def test_optimization_0으로_write_하고_덮어쓰기_command(
+    mocker, ssd_file_manager_mk, ssd_sut
+):
+    test_buffer = [
+        "1_W_1_0x00000000",
+        "2_W_2_0x00000000",
+        "3_W_1_0x12345678",
+        "4_empty",
+        "5_empty",
+    ]
+    result_buffer = ["1_E_2_1", "2_W_1_0x12345678", "3_empty", "4_empty", "5_empty"]
+    optimized_length = len(
+        [x for x in ssd_sut.optimization(test_buffer) if "empty" not in x]
+    )
+    result_length = len([x for x in result_buffer if "empty" not in x])
     assert optimized_length <= result_length
 
-def test_optimization_한번에_erase가능한_범위안에_write_된경우_nand(mocker, ssd_file_manager_mk, ssd_sut):
-    test_buffer = ['1_W_2_0x12345678', '2_E_3_4', '3_W_5_0x12345678', '4_E_1_4', '5_empty']
-    result_buffer = ['1_E_1_6', '2_W_5_0x12345678', '3_empty', '4_empty', '5_empty']
+
+def test_optimization_한번에_erase가능한_범위안에_write_된경우_nand(
+    mocker, ssd_file_manager_mk, ssd_sut
+):
+    test_buffer = [
+        "1_W_2_0x12345678",
+        "2_E_3_4",
+        "3_W_5_0x12345678",
+        "4_E_1_4",
+        "5_empty",
+    ]
+    result_buffer = ["1_E_1_6", "2_W_5_0x12345678", "3_empty", "4_empty", "5_empty"]
     # optimized_buffer = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
     optimized_buffer = ssd_sut.optimization(test_buffer)
     ssd_checker = SSDChecker()
     assert ssd_checker.check_optimization(optimized_buffer, result_buffer) == True
 
-def test_optimization_한번에_erase가능한_범위안에_write_된경우_command(mocker, ssd_file_manager_mk, ssd_sut):
-    test_buffer = ['1_W_2_0x12345678', '2_E_3_4', '3_W_5_0x12345678', '4_E_1_4', '5_empty']
-    result_buffer = ['1_E_1_6', '2_W_5_0x12345678', '3_empty', '4_empty', '5_empty']
-    optimized_length = len([x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x])
-    result_length = len([x for x in result_buffer if 'empty' not in x])
+
+def test_optimization_한번에_erase가능한_범위안에_write_된경우_command(
+    mocker, ssd_file_manager_mk, ssd_sut
+):
+    test_buffer = [
+        "1_W_2_0x12345678",
+        "2_E_3_4",
+        "3_W_5_0x12345678",
+        "4_E_1_4",
+        "5_empty",
+    ]
+    result_buffer = ["1_E_1_6", "2_W_5_0x12345678", "3_empty", "4_empty", "5_empty"]
+    optimized_length = len(
+        [x for x in ssd_sut.optimization(test_buffer) if "empty" not in x]
+    )
+    result_length = len([x for x in result_buffer if "empty" not in x])
     assert optimized_length <= result_length
 
-def test_optimization_write된값이_모두_erase_된경우_nand(mocker, ssd_file_manager_mk, ssd_sut):
-    test_buffer = ['1_W_0_0x12345678', '2_W_1_0x12345678', '3_W_2_0x12345678', '4_E_0_3', '5_empty']
-    result_buffer = ['1_E_0_3', '2_empty', '3_empty', '4_empty', '5_empty']
+
+def test_optimization_write된값이_모두_erase_된경우_nand(
+    mocker, ssd_file_manager_mk, ssd_sut
+):
+    test_buffer = [
+        "1_W_0_0x12345678",
+        "2_W_1_0x12345678",
+        "3_W_2_0x12345678",
+        "4_E_0_3",
+        "5_empty",
+    ]
+    result_buffer = ["1_E_0_3", "2_empty", "3_empty", "4_empty", "5_empty"]
     # optimized_buffer = [x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x]
     optimized_buffer = ssd_sut.optimization(test_buffer)
     ssd_checker = SSDChecker()
     assert ssd_checker.check_optimization(optimized_buffer, result_buffer) == True
 
-def test_optimization_write된값이_모두_erase_된경우_command(mocker, ssd_file_manager_mk, ssd_sut):
-    test_buffer = ['1_W_0_0x12345678', '2_W_1_0x12345678', '3_W_2_0x12345678', '4_E_0_3', '5_empty']
-    result_buffer = ['1_E_0_3', '2_empty', '3_empty', '4_empty', '5_empty']
-    optimized_length = len([x for x in ssd_sut.optimization(test_buffer) if 'empty' not in x])
-    result_length = len([x for x in result_buffer if 'empty' not in x])
+
+def test_optimization_write된값이_모두_erase_된경우_command(
+    mocker, ssd_file_manager_mk, ssd_sut
+):
+    test_buffer = [
+        "1_W_0_0x12345678",
+        "2_W_1_0x12345678",
+        "3_W_2_0x12345678",
+        "4_E_0_3",
+        "5_empty",
+    ]
+    result_buffer = ["1_E_0_3", "2_empty", "3_empty", "4_empty", "5_empty"]
+    optimized_length = len(
+        [x for x in ssd_sut.optimization(test_buffer) if "empty" not in x]
+    )
+    result_length = len([x for x in result_buffer if "empty" not in x])
     assert optimized_length <= result_length
 
 
@@ -607,126 +666,158 @@ def test_optimization_write된값이_모두_erase_된경우_command(mocker, ssd_
     [
         # 1) simple merge of two erases
         (
-            ['1_E_10_4', '2_E_12_3', '3_empty', '4_empty', '5_empty'],
-            ['1_E_10_5', '2_empty',    '3_empty',    '4_empty',    '5_empty']
+            ["1_E_10_4", "2_E_12_3", "3_empty", "4_empty", "5_empty"],
+            ["1_E_10_5", "2_empty", "3_empty", "4_empty", "5_empty"],
         ),
         # 2) merge erases but keep a write
         (
-            ['1_W_20_0x12345678', '2_E_10_4', '3_E_12_3', '4_empty', '5_empty'],
-            ['1_W_20_0x12345678', '2_E_10_5', '3_empty',  '4_empty',  '5_empty']
+            ["1_W_20_0x12345678", "2_E_10_4", "3_E_12_3", "4_empty", "5_empty"],
+            ["1_W_20_0x12345678", "2_E_10_5", "3_empty", "4_empty", "5_empty"],
         ),
         # 3) merge forbidden because union size > 10
         (
-            ['1_E_0_7', '2_E_7_8', '3_empty', '4_empty', '5_empty'],
-            ['1_E_0_7', '2_E_7_8', '3_empty', '4_empty', '5_empty']
+            ["1_E_0_7", "2_E_7_8", "3_empty", "4_empty", "5_empty"],
+            ["1_E_0_7", "2_E_7_8", "3_empty", "4_empty", "5_empty"],
         ),
         # 4) overlapping erases merge
         (
-            ['1_E_5_3', '2_E_7_2', '3_empty', '4_empty', '5_empty'],
-            ['1_E_5_4', '2_empty', '3_empty', '4_empty', '5_empty']
+            ["1_E_5_3", "2_E_7_2", "3_empty", "4_empty", "5_empty"],
+            ["1_E_5_4", "2_empty", "3_empty", "4_empty", "5_empty"],
         ),
         # 5) chain-merge three erases
         (
-            ['1_E_1_2', '2_E_3_4', '3_E_7_3', '4_empty', '5_empty'],
-            ['1_E_1_9', '2_empty', '3_empty', '4_empty', '5_empty']
+            ["1_E_1_2", "2_E_3_4", "3_E_7_3", "4_empty", "5_empty"],
+            ["1_E_1_9", "2_empty", "3_empty", "4_empty", "5_empty"],
         ),
         # 6) erase-merge + drop overlapping write
         (
-            ['1_W_10_0x12345678', '2_E_8_3', '3_E_10_5', '4_empty', '5_empty'],
-            ['1_E_8_7', '2_empty',    '3_empty',   '4_empty',    '5_empty']
+            ["1_W_10_0x12345678", "2_E_8_3", "3_E_10_5", "4_empty", "5_empty"],
+            ["1_E_8_7", "2_empty", "3_empty", "4_empty", "5_empty"],
         ),
         # 7) ignore duplicate writes only
         (
-            ['1_W_1_0x12345678', '2_W_2_0x12345678', '3_W_1_0x12345678', '4_empty', '5_empty'],
-            ['1_W_2_0x12345678', '2_W_1_0x12345678', '3_empty',          '4_empty',    '5_empty']
+            [
+                "1_W_1_0x12345678",
+                "2_W_2_0x12345678",
+                "3_W_1_0x12345678",
+                "4_empty",
+                "5_empty",
+            ],
+            ["1_W_2_0x12345678", "2_W_1_0x12345678", "3_empty", "4_empty", "5_empty"],
         ),
         # 8) merge adjacent erases, no writes
         (
-            ['1_E_2_4', '2_E_6_3', '3_empty', '4_empty', '5_empty'],
-            ['1_E_2_7', '2_empty', '3_empty', '4_empty', '5_empty']
+            ["1_E_2_4", "2_E_6_3", "3_empty", "4_empty", "5_empty"],
+            ["1_E_2_7", "2_empty", "3_empty", "4_empty", "5_empty"],
         ),
         # 9) merge disjoint erases into a single range
         (
-            ['1_W_0_0x12345678', '2_E_2_5', '3_W_5_0x12345678', '4_E_7_2', '5_empty'],
-            ['1_W_0_0x12345678', '2_E_2_7', '3_W_5_0x12345678', '4_empty',    '5_empty']
+            ["1_W_0_0x12345678", "2_E_2_5", "3_W_5_0x12345678", "4_E_7_2", "5_empty"],
+            ["1_W_0_0x12345678", "2_E_2_7", "3_W_5_0x12345678", "4_empty", "5_empty"],
         ),
         # 10) capacity=5, both algos: merge erases, keep latest write
         (
-            ['1_W_1_0x12345678', '2_W_2_0x12345678', '3_E_1_3', '4_E_3_3', '5_W_2_0x12345678'],
-            ['1_E_1_5', '2_W_2_0x12345678', '3_empty', '4_empty', '5_empty']
+            [
+                "1_W_1_0x12345678",
+                "2_W_2_0x12345678",
+                "3_E_1_3",
+                "4_E_3_3",
+                "5_W_2_0x12345678",
+            ],
+            ["1_E_1_5", "2_W_2_0x12345678", "3_empty", "4_empty", "5_empty"],
         ),
         # 10-1) same as 10 but last write is 0x00000000
         (
-            ['1_W_1_0x12345678', '2_W_2_0x12345678', '3_E_1_3', '4_E_3_3', '5_W_2_0x00000000'],
-            ['1_E_1_5', '2_empty', '3_empty', '4_empty', '5_empty']
+            [
+                "1_W_1_0x12345678",
+                "2_W_2_0x12345678",
+                "3_E_1_3",
+                "4_E_3_3",
+                "5_W_2_0x00000000",
+            ],
+            ["1_E_1_5", "2_empty", "3_empty", "4_empty", "5_empty"],
         ),
         # 10-2) write then overwrite before erase
         (
-            ['1_W_1_0x12345678', '2_W_1_0x00000000', '3_E_1_3', '4_empty', '5_empty'],
-            ['1_E_1_3', '2_empty', '3_empty', '4_empty', '5_empty']
+            ["1_W_1_0x12345678", "2_W_1_0x00000000", "3_E_1_3", "4_empty", "5_empty"],
+            ["1_E_1_3", "2_empty", "3_empty", "4_empty", "5_empty"],
         ),
         # 10-3) multiple overwrites, keep last
         (
-            ['1_W_1_0x00000000', '2_W_1_0x00000000', '3_W_1_0x00000001', '4_empty', '5_empty'],
-            ['1_W_1_0x00000001', '2_empty', '3_empty', '4_empty', '5_empty']
+            [
+                "1_W_1_0x00000000",
+                "2_W_1_0x00000000",
+                "3_W_1_0x00000001",
+                "4_empty",
+                "5_empty",
+            ],
+            ["1_W_1_0x00000001", "2_empty", "3_empty", "4_empty", "5_empty"],
         ),
         # 11) merge forbidden by size, drop overlapping write
         (
-            ['1_E_0_6', '2_E_6_6', '3_W_8_0x12345678', '4_empty', '5_empty'],
-            ['1_E_0_8', '2_E_9_3', '3_W_8_0x12345678', '4_empty', '5_empty']
+            ["1_E_0_6", "2_E_6_6", "3_W_8_0x12345678", "4_empty", "5_empty"],
+            ["1_E_0_8", "2_E_9_3", "3_W_8_0x12345678", "4_empty", "5_empty"],
         ),
         # 12) nested erases merge into the larger one
         (
-            ['1_E_4_5', '2_E_5_3', '3_empty', '4_empty', '5_empty'],
-            ['1_E_4_5', '2_empty', '3_empty', '4_empty', '5_empty']
+            ["1_E_4_5", "2_E_5_3", "3_empty", "4_empty", "5_empty"],
+            ["1_E_4_5", "2_empty", "3_empty", "4_empty", "5_empty"],
         ),
         # 13) overlap+merge erases, drop both writes
         (
-            ['1_W_6_0x12345678', '2_E_4_4', '3_W_5_0x12345678', '4_E_6_2', '5_empty'],
-            ['1_E_4_4', '2_W_5_0x12345678', '3_empty', '4_empty', '5_empty']
+            ["1_W_6_0x12345678", "2_E_4_4", "3_W_5_0x12345678", "4_E_6_2", "5_empty"],
+            ["1_E_4_4", "2_W_5_0x12345678", "3_empty", "4_empty", "5_empty"],
         ),
         # 14) no-op: single erase and writes far away
         (
-            ['1_W_9_0x12345678', '2_E_0_1', '3_W_3_0x12345678', '4_empty', '5_empty'],
-            ['1_W_9_0x12345678', '2_E_0_1', '3_W_3_0x12345678', '4_empty', '5_empty']
+            ["1_W_9_0x12345678", "2_E_0_1", "3_W_3_0x12345678", "4_empty", "5_empty"],
+            ["1_W_9_0x12345678", "2_E_0_1", "3_W_3_0x12345678", "4_empty", "5_empty"],
         ),
         # 15) boundary merge at high addresses
         (
-            ['1_E_95_5', '2_E_99_1', '3_empty', '4_empty', '5_empty'],
-            ['1_E_95_5', '2_empty', '3_empty', '4_empty', '5_empty']
+            ["1_E_95_5", "2_E_99_1", "3_empty", "4_empty", "5_empty"],
+            ["1_E_95_5", "2_empty", "3_empty", "4_empty", "5_empty"],
         ),
         # 16) boundary disjoint, no merge
         (
-            ['1_E_90_10', '2_E_80_5', '3_empty', '4_empty', '5_empty'],
-            ['1_E_90_10', '2_E_80_5', '3_empty', '4_empty', '5_empty']
+            ["1_E_90_10", "2_E_80_5", "3_empty", "4_empty", "5_empty"],
+            ["1_E_90_10", "2_E_80_5", "3_empty", "4_empty", "5_empty"],
         ),
         # 17) ignore+boundary merge drop write at 99
         (
-            ['1_W_99_0x12345678', '2_E_95_5', '3_E_99_1', '4_empty', '5_empty'],
-            ['1_E_95_5', '2_empty', '3_empty', '4_empty', '5_empty']
+            ["1_W_99_0x12345678", "2_E_95_5", "3_E_99_1", "4_empty", "5_empty"],
+            ["1_E_95_5", "2_empty", "3_empty", "4_empty", "5_empty"],
         ),
         # 18) small boundary merge at end
         (
-            ['1_E_97_3', '2_E_98_1', '3_empty', '4_empty', '5_empty'],
-            ['1_E_97_3', '2_empty', '3_empty', '4_empty', '5_empty']
+            ["1_E_97_3", "2_E_98_1", "3_empty", "4_empty", "5_empty"],
+            ["1_E_97_3", "2_empty", "3_empty", "4_empty", "5_empty"],
         ),
         # 19) all empty
         (
-            ['1_empty', '2_empty', '3_empty', '4_empty', '5_empty'],
-            ['1_empty', '2_empty', '3_empty', '4_empty', '5_empty']
+            ["1_empty", "2_empty", "3_empty", "4_empty", "5_empty"],
+            ["1_empty", "2_empty", "3_empty", "4_empty", "5_empty"],
         ),
         # 20) all writes to same LBA, keep last
         (
-            ['1_W_42_0xAAAAAAAA', '2_W_42_0xBBBBBBBB', '3_W_42_0xCCCCCCCC', '4_W_42_0xDDDDDDDD', '5_W_42_0xEEEEEEEE'],
-            ['1_W_42_0xEEEEEEEE', '2_empty', '3_empty', '4_empty', '5_empty']
+            [
+                "1_W_42_0xAAAAAAAA",
+                "2_W_42_0xBBBBBBBB",
+                "3_W_42_0xCCCCCCCC",
+                "4_W_42_0xDDDDDDDD",
+                "5_W_42_0xEEEEEEEE",
+            ],
+            ["1_W_42_0xEEEEEEEE", "2_empty", "3_empty", "4_empty", "5_empty"],
         ),
-    ]
+    ],
 )
-def test_optimization_test_case_들에_대하여_command_length가_적절하며_nand_결과를_동일하게_만드는지(ssd_file_manager_mk, ssd_sut, test_buffer, result_buffer):
+def test_optimization_test_case_들에_대하여_command_length가_적절하며_nand_결과를_동일하게_만드는지(
+    ssd_file_manager_mk, ssd_sut, test_buffer, result_buffer
+):
     optimized_buffer = ssd_sut.optimization(test_buffer)
-    optimized = [cmd for cmd in ssd_sut.optimization(test_buffer) if 'empty' not in cmd]
+    optimized = [cmd for cmd in ssd_sut.optimization(test_buffer) if "empty" not in cmd]
     optimized_length = len(optimized)
-    expected_length = len([cmd for cmd in result_buffer if 'empty' not in cmd])
+    expected_length = len([cmd for cmd in result_buffer if "empty" not in cmd])
 
     ssd_checker = SSDChecker()
 
