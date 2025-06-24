@@ -210,15 +210,17 @@ pytest tests/
 ### 🏭 Factory 패턴
 
 - 셸 명령어 객체 생성을 `command_factory`에 위임하여, 명령어 유형 추가 시 유연하게 대처할 수 있습니다.
-![img_4.png](img_4.png)
 
+![image](https://github.com/user-attachments/assets/20d70738-ad54-4ea8-a9ab-19946d5b2471)
 
+  
 ---
 
 ### 📋 Command 패턴
 
 - 명령 실행 로직을 `Command` 객체와 `Receiver`(예: SSD)에 위임하여 실행 책임을 분리하고 확장성을 확보합니다.
-![img_6.png](img_6.png)
+
+![image](https://github.com/user-attachments/assets/90e3c51b-0383-4ecb-9c8a-a1017d555c6d)
 
 
 ---
@@ -227,5 +229,75 @@ pytest tests/
 
 - 다양한 테스트 스크립트를 전략 객체로 처리하여 셸 로직의 일관성과 테스트 확장성을 제공합니다.
 
-![img_5.png](img_5.png)
+![image](https://github.com/user-attachments/assets/b20e9638-e11c-4ee0-9895-ef25f27548a4)
+
+
+### 🔒 Singleton 패턴
+
+- 모든 모듈이 하나의 logger 인스턴스를 사용함으로 logging의 정합성을 유지할 수 있습니다.
+
+```python
+class Logger:
+...
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+```
+
+---
+
+##  테스트 더블
+
+- 특정 shell 명령을 patching 하여 stubbing 합니다.
+
+```python
+def test_FULLWRITE명령어_비정상인자_0x없음_INVALID_COMMAND(
+    mocker: MockerFixture, shell
+):
+    mocker.patch("builtins.input", return_value="fullwrite ABCF33")
+```
+
+- SSD가 잘못된 커맨드 받았을 때 mock 통해 행동검증 합니다.
+
+```python
+@pytest.fixture
+def ssd_file_manager_mk(mocker):
+    ssd_file_manager_mk = mocker.Mock(spec=SSDFileManager)
+    return ssd_file_manager_mk
+
+def test_read명령어_잘못된_LBA범위_입력시_파일매니저의_출력하는함수를_한번_호출하는가(
+    ssd_file_manager_mk, ssd_sut
+):
+    ssd_sut.read(WRONG_LBA_ADDRESS)
+
+    ssd_file_manager_mk.print_ssd_output.assert_called_once()
+```
+
+---
+
+## 주요 동작 시연
+
+- Shell runner mode
+  - 테스트 스크립트 1, 2번 수행하면서 에이징되는 커맨드 버퍼 변화를 보여줍니다.
+
+![Shell_Runner시연4배속](https://github.com/user-attachments/assets/feb5d753-7afe-4f42-a99a-62e710ebec2c)
+
+
+- 커맨드 실행 옵티마이저
+  - 2번째 ERASE가 1번째 WRITE를 무효화하므로 커맨드 버퍼 내용을 치환합니다. (Ignore)
+  - 4번째 ERASE는 두번째 ERASE와 연결되어 있는 영역을 지우기 때문에 2번째 ERASE에 병합됩니다. (Merge Erase)
+  - 5번째 READ는 에이징된 3번째 WRITE DATA를 읽어오기 때문에 NAND를 읽지 않게 됩니다. (Fast Read)
+
+![buffer_optimization](https://github.com/user-attachments/assets/016c6442-f82a-4881-b8b2-7b6fbdb85dc7)
+
+
+---
+
+## 코드 커버리지 측정
+
+- 총 87% 달성
+
+![cov](https://github.com/user-attachments/assets/57de4df1-f81d-4ee8-b56b-e7c4210515a7)
+
 
