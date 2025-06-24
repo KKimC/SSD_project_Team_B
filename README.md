@@ -39,9 +39,10 @@ set PYTHONPATH=src
 export PYTHONPATH=src
 ```
 
-### 3. SSD 셸 실행
+### 3. 가상환경 활성화 및 SSD 셸 실행
 
 ```bash
+..\.venv\Scripts\activate.bat
 python ssd_shell.py
 ```
 
